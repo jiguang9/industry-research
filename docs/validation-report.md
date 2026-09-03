@@ -1,10 +1,14 @@
 # 验证记录
 
-版本：0.1.1　记录日期：2026-09-03
+版本：0.1.2　记录日期：2026-09-03
 
-## 0. v0.1.1 相对 v0.1.0 的修复（外部评审驱动）
+## 0. 外部评审修复历史
 
-v0.1.0 发布后收到一份具体、可复现的外部评审，指出 5 类真实问题（校验器未做跨字段真实性核对、安装器失败恢复路径不安全、公开案例违反自身证据边界、Release 校验文件在解压前必然失败、评测用例1的措辞实际触发了用例4而非用例1）以及一处文档过时判断（Hermes Direct URL 安装范围）。逐条核实后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.1 条目。本文件下方的内容已按修复后的状态更新；**不修改或删除已发布的 `v0.1.0` tag**，问题记录保留在 git 历史中。
+**v0.1.1（相对 v0.1.0）**：v0.1.0 发布后收到一份具体、可复现的外部评审，指出 5 类真实问题（校验器未做跨字段真实性核对、安装器失败恢复路径不安全、公开案例违反自身证据边界、Release 校验文件在解压前必然失败、评测用例1的措辞实际触发了用例4而非用例1）以及一处文档过时判断（Hermes Direct URL 安装范围）。逐条核实后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.1 条目。
+
+**v0.1.2（相对 v0.1.1）**：继续收到第二轮评审，指出 v0.1.1 的修复不完整：跨 metric 核对遗漏了 `name`（GMV vs 收入）和 `price_basis`（名义/实际）两个字段，`period` 被无条件豁免导致横截面比较的时期不一致检测不到；多个 evidence-schema.md 文档中标注为必需的字段（`schema_version`、`sources[].publisher` 等、`claims[].counter_source_ids` 等）删除后校验器仍能通过；公开案例 report.md 第三节仍保留"这个细分行业……尚未普遍形成稳定盈利模式"这一从单一企业数据直接得出的行业级结论，认识2 处的措辞已改但正文这处没有同步。逐条核实后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.2 条目。
+
+以上两轮修复均**不修改或删除已发布的 `v0.1.0`/`v0.1.1` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.2 修复后的状态更新。
 
 ## 1. 自动化测试
 
@@ -18,8 +22,8 @@ python3 tools/build_release.py
 实际运行结果（本机，macOS 23.5.0 arm64，Python 3.9.6）：
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
-- `python3 -m unittest discover -s tests`：**45 个测试，全部通过**，覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、**跨 metric 真实一致性核对**、**comparisons/gaps 重复 ID 检测**、**machine_validation.performed/result 一致性**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、**--replace 失败恢复的故障注入测试**）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。加粗部分为 0.1.1 新增，直接对应外部评审发现的问题。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.1.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
+- `python3 -m unittest discover -s tests`：**56 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 **name/price_basis/cross_sectional 的 period**、comparisons/gaps 重复 ID 检测、machine_validation.performed/result 一致性、**7 个必需字段删除后必须报错**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.2.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 
@@ -55,7 +59,7 @@ python3 scripts/validate_evidence.py examples/public-industry-case/evidence.json
 用例编号：1（普通行业名，未指定深度）
 执行日期：2026-09-03
 Skill版本：0.1.0（子 Agent 启动时读取到的是替换为 0.1.1 之前的本机已安装版本；本次验证的是发现+行为机制本身，
-  该机制在 0.1.1 中未变，结论适用；机器校验器的具体规则改动见本报告"0. v0.1.1 相对 v0.1.0 的修复"一节）
+  该机制在后续版本中未变，结论适用；机器校验器的具体规则改动见本报告"0. 外部评审修复历史"一节）
 执行平台：Claude Code 2.1.201（子 Agent，独立无先前上下文）
 输入摘要："帮我快速了解中国预制菜行业"（不含"商务通话""客户""深入"等任何深度/用途信号词）
 实际输出位置：/Users/weiguang/Desktop/industry-research/industry-research-output/yuzhicai-prepared-meals-20260903/

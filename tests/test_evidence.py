@@ -154,7 +154,7 @@ class TimeSeriesVsCrossSectionComparisonTests(unittest.TestCase):
             }],
         })
         evidence["comparisons"] = [{
-            "id": "CMP010", "metric_refs": ["C001.0", "C010.0"],
+            "id": "CMP010", "comparison_type": "time_series", "metric_refs": ["C001.0", "C010.0"],
             "purpose": "同一企业跨年度门店数趋势对比",
             "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
         }]
@@ -241,7 +241,7 @@ class CrossMetricComparisonIntegrityTests(unittest.TestCase):
         }
         evidence = self._two_claims_with_metrics(evidence, metric_a, metric_b)
         evidence["comparisons"] = [{
-            "id": "CMP999", "metric_refs": ["C001.0", "C002.0"],
+            "id": "CMP999", "comparison_type": "cross_sectional", "metric_refs": ["C001.0", "C002.0"],
             "purpose": "adversarial: undeclared CNY vs USD and unit mismatch, claimed comparable",
             "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
         }]
@@ -267,7 +267,7 @@ class CrossMetricComparisonIntegrityTests(unittest.TestCase):
         }
         evidence = self._two_claims_with_metrics(evidence, metric_a, metric_b)
         evidence["comparisons"] = [{
-            "id": "CMP999", "metric_refs": ["C001.0", "C002.0"],
+            "id": "CMP999", "comparison_type": "cross_sectional", "metric_refs": ["C001.0", "C002.0"],
             "purpose": "honestly declared currency/unit mismatch",
             "comparable": False, "mismatched_dimensions": ["currency", "unit"], "adjustment_note": None,
         }]
@@ -279,7 +279,7 @@ class DuplicateComparisonAndGapIdTests(unittest.TestCase):
     def test_duplicate_comparison_id_is_rejected(self):
         evidence = load("valid_evidence.json")
         comp = {
-            "id": "CMP001", "metric_refs": ["C001.0"], "purpose": "dup test A",
+            "id": "CMP001", "comparison_type": "cross_sectional", "metric_refs": ["C001.0"], "purpose": "dup test A",
             "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
         }
         evidence["comparisons"] = [dict(comp), dict(comp, purpose="dup test B")]
@@ -324,6 +324,160 @@ class MachineValidationConsistencyTests(unittest.TestCase):
         }
         result = ve.validate(evidence, None)
         self.assertEqual(result.errors, [])
+
+
+class NameAndPriceBasisMismatchTests(unittest.TestCase):
+    """Second-round review findings: GMV-vs-revenue (different 'name') and
+    nominal-vs-real (different 'price_basis') mismatches must be caught even
+    though unit/currency/region/scope/value_type all agree."""
+
+    def _two_claims_with_metrics(self, evidence, metric_a, metric_b):
+        evidence["claims"] = []
+        evidence["gaps"] = []
+        evidence["claims"].append({
+            "id": "C001", "statement": "A", "kind": "fact", "evidence_status": "supported",
+            "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
+            "confidence": "high", "limitations": [], "metrics": [metric_a],
+        })
+        evidence["claims"].append({
+            "id": "C002", "statement": "B", "kind": "fact", "evidence_status": "supported",
+            "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
+            "confidence": "high", "limitations": [], "metrics": [metric_b],
+        })
+        return evidence
+
+    def test_gmv_vs_revenue_name_mismatch_with_comparable_true_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        metric_a = {
+            "name": "成交总额(GMV)", "value": 100, "unit": "亿元", "period": "2024", "region": "中国",
+            "scope": "平台整体", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": [],
+        }
+        metric_b = {
+            "name": "企业营业收入", "value": 8, "unit": "亿元", "period": "2024", "region": "中国",
+            "scope": "平台整体", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": [],
+        }
+        evidence = self._two_claims_with_metrics(evidence, metric_a, metric_b)
+        evidence["comparisons"] = [{
+            "id": "CMP998", "comparison_type": "cross_sectional", "metric_refs": ["C001.0", "C002.0"],
+            "purpose": "adversarial: GMV vs revenue, same unit/currency, claimed comparable",
+            "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
+        }]
+        result = ve.validate(evidence, None)
+        messages = error_messages(result)
+        self.assertTrue(any("'name'" in m and "comparable=true" in m for m in messages), messages)
+
+    def test_nominal_vs_real_price_basis_mismatch_with_comparable_true_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        metric_a = {
+            "name": "revenue", "value": 100, "unit": "亿元", "period": "2020", "region": "中国",
+            "scope": "行业整体", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": [],
+            "price_basis": "nominal",
+        }
+        metric_b = {
+            "name": "revenue", "value": 110, "unit": "亿元", "period": "2024", "region": "中国",
+            "scope": "行业整体", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": [],
+            "price_basis": "real (2020 constant prices)",
+        }
+        evidence = self._two_claims_with_metrics(evidence, metric_a, metric_b)
+        evidence["comparisons"] = [{
+            "id": "CMP997", "comparison_type": "time_series", "metric_refs": ["C001.0", "C002.0"],
+            "purpose": "adversarial: nominal vs real growth, claimed comparable as a trend",
+            "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
+        }]
+        result = ve.validate(evidence, None)
+        messages = error_messages(result)
+        self.assertTrue(any("price_basis" in m and "comparable=true" in m for m in messages), messages)
+
+
+class CrossSectionalPeriodMismatchTests(unittest.TestCase):
+    """Second-round review finding: a cross_sectional comparison across two
+    different periods (e.g. 2024 vs 2025) must not be wavable through just
+    because 'period' used to be unconditionally exempted."""
+
+    def test_cross_sectional_comparison_with_different_periods_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"] = []
+        evidence["gaps"] = []
+        evidence["claims"].append({
+            "id": "C001", "statement": "company A revenue", "kind": "fact", "evidence_status": "supported",
+            "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
+            "confidence": "high", "limitations": [], "metrics": [{
+                "name": "revenue", "value": 100, "unit": "亿元", "period": "2024", "region": "中国",
+                "scope": "公司A整体", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": [],
+            }],
+        })
+        evidence["claims"].append({
+            "id": "C002", "statement": "company B revenue", "kind": "fact", "evidence_status": "supported",
+            "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
+            "confidence": "high", "limitations": [], "metrics": [{
+                "name": "revenue", "value": 120, "unit": "亿元", "period": "2025", "region": "中国",
+                "scope": "公司B整体", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": [],
+            }],
+        })
+        evidence["comparisons"] = [{
+            "id": "CMP996", "comparison_type": "cross_sectional", "metric_refs": ["C001.0", "C002.0"],
+            "purpose": "adversarial: comparing two different companies' revenue from two different years as if same point in time",
+            "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
+        }]
+        result = ve.validate(evidence, None)
+        messages = error_messages(result)
+        self.assertTrue(any("'period'" in m and "comparable=true" in m for m in messages), messages)
+
+    def test_time_series_comparison_with_different_periods_is_still_accepted(self):
+        """Sanity check: the fix must not break the legitimate time-series case."""
+        result = ve.validate(load("valid_evidence.json"), None)
+        # valid_evidence.json's CMP001 has only one metric_ref so the
+        # cross-check doesn't fire either way; this asserts the base fixture
+        # (comparison_type='cross_sectional' but single ref) is unaffected.
+        self.assertEqual(result.errors, [])
+
+
+class RequiredFieldDeletionTests(unittest.TestCase):
+    """Second-round review finding: deleting documented-required fields
+    (schema_version, source.publisher, claim array fields) must fail
+    structural validation, not just emit a warning."""
+
+    def test_missing_schema_version_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["schema_version"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("schema_version" in e["path"] for e in result.errors))
+
+    def test_missing_source_publisher_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["sources"][0]["publisher"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("publisher" in m for m in error_messages(result)))
+
+    def test_missing_source_access_note_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["sources"][0]["access_note"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("access_note" in m for m in error_messages(result)))
+
+    def test_missing_claim_counter_source_ids_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["counter_source_ids"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("counter_source_ids" in m for m in error_messages(result)))
+
+    def test_missing_claim_basis_claim_ids_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["basis_claim_ids"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("basis_claim_ids" in m for m in error_messages(result)))
+
+    def test_missing_claim_limitations_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["limitations"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("limitations" in m for m in error_messages(result)))
+
+    def test_missing_claim_metrics_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["metrics"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("metrics" in m for m in error_messages(result)))
 
 
 class FixtureInventoryTests(unittest.TestCase):

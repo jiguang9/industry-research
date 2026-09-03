@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.2 - 2026-09-03
+
+Second round of fixes from continued external review of v0.1.1. Again, every finding was independently reproduced before fixing. See `docs/validation-report.md` (section 0) for the full writeup.
+
+- `scripts/validate_evidence.py` comparisons: the real-metric cross-check added in v0.1.1 compared `unit`/`currency`/`region`/`scope`/`value_type` but missed `name` (so a GMV-vs-revenue comparison declared `comparable=true` slipped through) and `price_basis` (nominal-vs-real). Both are now checked. Also added a required `comparison_type` field (`time_series` | `cross_sectional`): previously `period` was unconditionally exempted from the comparison, which correctly allows a trend comparison to span years but also let a genuinely invalid cross-sectional comparison (e.g. two different companies' 2024 vs 2025 figures) through undetected. `cross_sectional` comparisons now also check `period`; `time_series` comparisons keep the original exemption.
+- `scripts/validate_evidence.py` required-field enforcement: several fields documented as required in `references/evidence-schema.md` (`schema_version`, `sources[].publisher`/`published_at`/`data_period`/`origin_id`/`location`/`excerpt`/`access_note`, `claims[].counter_source_ids`/`basis_claim_ids`/`limitations`/`metrics`) were only type-checked when present, so deleting the key entirely produced no error (schema_version fell back to a soft warning; the rest passed silently). All are now enforced as required keys (most remain nullable-valued, matching the schema doc) via the existing `_require` helper.
+- `examples/public-industry-case/report.md`: the "三、交易、交付与商业模式" section still stated "这个细分行业目前仍处于……尚未普遍形成稳定盈利模式的阶段" as a direct conclusion, with the single-company caveat appended afterward as an aside. Reworded so the single-company scope is stated up front rather than walked back after the fact.
+- 11 new tests target the exact new adversarial cases (GMV/revenue name mismatch, nominal/real price_basis mismatch, cross-sectional period mismatch, and each of the 7 field-deletion cases above).
+
 ## 0.1.1 - 2026-09-03
 
 Fixes from an external review of v0.1.0. See `docs/validation-report.md` for the full writeup; summary:

@@ -307,6 +307,7 @@
   "comparisons": [
     {
       "id": "CMP001",
+      "comparison_type": "cross_sectional",
       "metric_refs": ["C006.0", "C007.0"],
       "purpose": "2025年GGII实际销量数字与另一机构2026年预测销量数字，容易被误当作同一趋势下的连续数字直接比较增速",
       "comparable": false,
@@ -342,7 +343,7 @@
     "machine_validation": {
       "performed": true,
       "tool": "scripts/validate_evidence.py",
-      "tool_version": "0.1.1",
+      "tool_version": "0.1.2",
       "result": "passed"
     }
   }

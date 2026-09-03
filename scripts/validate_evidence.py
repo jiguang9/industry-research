@@ -166,15 +166,10 @@ def validate_sources(sources: Any, result: Result) -> dict[str, dict]:
                 by_id[sid] = src
 
         _require(src, "title", path, result, _is_str)
-        if "publisher" in src and not _is_nullable_str(src["publisher"]):
-            result.error(f"{path}.publisher", "must be a string or null")
+        _require(src, "publisher", path, result, _is_nullable_str)
 
-        url = src.get("url")
-        file_ref = src.get("file_ref")
-        if not _is_nullable_str(url):
-            result.error(f"{path}.url", "must be a string or null")
-        if not _is_nullable_str(file_ref):
-            result.error(f"{path}.file_ref", "must be a string or null")
+        url = _require(src, "url", path, result, _is_nullable_str)
+        file_ref = _require(src, "file_ref", path, result, _is_nullable_str)
         if not url and not file_ref:
             result.error(path, "at least one of 'url' or 'file_ref' must be set")
 
@@ -187,8 +182,7 @@ def validate_sources(sources: Any, result: Result) -> dict[str, dict]:
             result.error(f"{path}.access_status", f"must be one of {sorted(ACCESS_STATUSES)}, got {access_status!r}")
 
         for nullable_field in ("published_at", "data_period", "origin_id", "location", "excerpt", "access_note"):
-            if nullable_field in src and not _is_nullable_str(src[nullable_field]):
-                result.error(f"{path}.{nullable_field}", "must be a string or null")
+            _require(src, nullable_field, path, result, _is_nullable_str)
 
         accessed_at = _require(src, "accessed_at", path, result, _is_str)
         if accessed_at is not None and not DATE_RE.match(accessed_at):
@@ -320,18 +314,14 @@ def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[s
         if kind != "unknown" and isinstance(c_source_ids, list) and len(c_source_ids) == 0 and evidence_status != "unverified":
             result.warning(path, f"claim '{cid}': no source_ids but evidence_status='{evidence_status}'")
 
-        counter_ids = claim.get("counter_source_ids", [])
-        if not isinstance(counter_ids, list):
-            result.error(f"{path}.counter_source_ids", "must be an array")
-        else:
+        counter_ids = _require(claim, "counter_source_ids", path, result, lambda v: isinstance(v, list))
+        if isinstance(counter_ids, list):
             for sid in counter_ids:
                 if sid not in source_ids:
                     result.error(f"{path}.counter_source_ids", f"claim '{cid}' references unknown source id '{sid}'")
 
-        basis_ids = claim.get("basis_claim_ids", [])
-        if not isinstance(basis_ids, list):
-            result.error(f"{path}.basis_claim_ids", "must be an array")
-        else:
+        basis_ids = _require(claim, "basis_claim_ids", path, result, lambda v: isinstance(v, list))
+        if isinstance(basis_ids, list):
             for bid in basis_ids:
                 if bid not in by_id:
                     result.error(f"{path}.basis_claim_ids", f"claim '{cid}' references unknown claim id '{bid}'")
@@ -340,9 +330,7 @@ def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[s
         if confidence is not None and confidence not in CONFIDENCE_LEVELS:
             result.error(f"{path}.confidence", f"must be one of {sorted(CONFIDENCE_LEVELS)}, got {confidence!r}")
 
-        limitations = claim.get("limitations", [])
-        if not isinstance(limitations, list):
-            result.error(f"{path}.limitations", "must be an array")
+        _require(claim, "limitations", path, result, lambda v: isinstance(v, list))
 
         if evidence_status == "supported":
             has_read_source = any(
@@ -364,10 +352,8 @@ def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[s
         if confidence == "low" and evidence_status == "supported":
             result.review(path, f"claim '{cid}' has confidence='low' but evidence_status='supported'; verify wording matches")
 
-        metrics = claim.get("metrics", [])
-        if not isinstance(metrics, list):
-            result.error(f"{path}.metrics", "must be an array")
-        else:
+        metrics = _require(claim, "metrics", path, result, lambda v: isinstance(v, list))
+        if isinstance(metrics, list):
             for j, metric in enumerate(metrics):
                 validate_metric(metric, f"{path}.metrics[{j}]", result, source_ids)
 
@@ -398,12 +384,16 @@ def detect_cycles(claims_by_id: dict[str, dict], result: Result) -> None:
 
 
 # Dimensions compared directly between the metrics a comparison references.
-# 'period' is deliberately excluded here -- a comparison is allowed to declare
-# comparable=true across different periods (that's what a time-series trend
-# comparison is). Everything else must actually match if comparable=true;
-# author-declared mismatched_dimensions is cross-checked against these real
-# values instead of being trusted at face value.
-METRIC_COMPARISON_FIELDS = ("unit", "currency", "region", "scope", "value_type")
+# 'period' is checked unless comparison_type='time_series' -- a time-series
+# trend comparison is the one legitimate case where comparable=true across
+# different periods is correct (the whole point is showing change over time).
+# A cross-sectional comparison declaring comparable=true must match on period
+# too, or the "same point in time" premise of comparing two things side by
+# side doesn't hold. 'name' and 'price_basis' catch GMV-vs-revenue and
+# nominal-vs-real mismatches respectively. Everything here is cross-checked
+# against the actual referenced metrics, not just the author's self-report.
+COMPARISON_TYPES = {"time_series", "cross_sectional"}
+ALWAYS_COMPARED_FIELDS = ("name", "unit", "currency", "region", "scope", "value_type", "price_basis")
 
 
 def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[str, dict]) -> None:
@@ -426,6 +416,10 @@ def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[st
                 seen_ids.add(cid)
 
         _require(comp, "purpose", path, result, _is_str)
+
+        comparison_type = _require(comp, "comparison_type", path, result, _is_str)
+        if comparison_type is not None and comparison_type not in COMPARISON_TYPES:
+            result.error(f"{path}.comparison_type", f"must be one of {sorted(COMPARISON_TYPES)}, got {comparison_type!r}")
 
         metric_refs = _require(comp, "metric_refs", path, result, lambda v: isinstance(v, list))
         resolved_metrics: list[dict] = []
@@ -460,12 +454,17 @@ def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[st
 
         # Cross-check the actual referenced metrics against the declared
         # comparable/mismatched_dimensions instead of trusting the author's
-        # self-report: if the underlying metrics genuinely differ in unit,
-        # currency, region, scope, or value_type, comparable=true is wrong
-        # regardless of what mismatched_dimensions claims.
+        # self-report: if the underlying metrics genuinely differ, comparable=true
+        # is wrong regardless of what mismatched_dimensions claims. A
+        # cross_sectional comparison also requires period to match; a
+        # time_series comparison is specifically allowed to span periods.
+        fields_to_check = ALWAYS_COMPARED_FIELDS
+        if comparison_type == "cross_sectional":
+            fields_to_check = ALWAYS_COMPARED_FIELDS + ("period",)
+
         if len(resolved_metrics) >= 2 and comparable is True:
             baseline = resolved_metrics[0]
-            for field in METRIC_COMPARISON_FIELDS:
+            for field in fields_to_check:
                 baseline_val = baseline.get(field)
                 for other in resolved_metrics[1:]:
                     other_val = other.get(field)
@@ -561,9 +560,10 @@ def validate(evidence: Any, report_path: Path | None) -> Result:
         result.error("$", "top-level evidence.json must be an object")
         return result
 
-    schema_version = evidence.get("schema_version")
-    if schema_version != SCHEMA_VERSION:
-        result.warning("schema_version", f"expected '{SCHEMA_VERSION}', got {schema_version!r}")
+    if "schema_version" not in evidence:
+        result.error("schema_version", "missing required field 'schema_version'")
+    elif evidence["schema_version"] != SCHEMA_VERSION:
+        result.warning("schema_version", f"expected '{SCHEMA_VERSION}', got {evidence['schema_version']!r}")
 
     validate_research(evidence.get("research"), result)
 

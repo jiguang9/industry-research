@@ -101,11 +101,14 @@
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | id | string | 唯一 ID，如 `CMP001` |
+| comparison_type | enum | `time_series`（同一指标跨时期的趋势比较，允许 `period` 不同）/ `cross_sectional`（同一时点下不同对象的横向比较，`period` 也需要一致） |
 | metric_refs | array of string | 格式 `"<claim_id>.<metric_index>"`，例如 `"C002.0"`，指向具体 claim 下 metrics 数组中的某一项 |
 | purpose | string | 比较目的说明 |
 | comparable | boolean | 是否认为这组数字在关键口径上可比 |
 | mismatched_dimensions | array of string | 不一致的口径维度；`comparable=true` 时应为空数组 |
 | adjustment_note | string \| null | 如做过单位换算等调整，说明换算过程；未做调整为 `null` |
+
+`comparable=true` 时，校验器会实际解析 `metric_refs` 指向的 metric，核对 `name`、`unit`、`currency`、`region`、`scope`、`value_type`、`price_basis` 是否真的一致（`cross_sectional` 时额外核对 `period`），而不是只信任作者自己填写的 `mismatched_dimensions`——两者不一致时判为结构错误。
 
 ## gaps（数组，可为空）
 

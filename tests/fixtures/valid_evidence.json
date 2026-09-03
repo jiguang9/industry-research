@@ -108,6 +108,7 @@
   "comparisons": [
     {
       "id": "CMP001",
+      "comparison_type": "cross_sectional",
       "metric_refs": ["C001.0"],
       "purpose": "作为示例，展示单一指标的口径记录（此处无第二个可比数字，仅作字段格式示范）",
       "comparable": true,
