@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.6 - 2026-09-03
+
+Sixth round of review, but a different class of finding this time: not a validator code bug (five straight rounds of those are now closed), but semantic evidence-discipline problems in `examples/public-industry-case/` that no structural validator can catch -- exactly the boundary `scripts/validate_evidence.py`'s own disclaimer names ("does not verify... that a citation genuinely supports the claim it is attached to"). Every finding was independently verified by reading the cited claim's actual `statement` field before fixing.
+
+- `report.md` cited `[C006]` (China's 2025 sales volume/share/export numbers) to support a sentence about collaborative welding and heavy-load palletizing being current application highlights -- `C006`'s statement has nothing to do with application scenarios. Researched and added a properly sourced claim (`C011`, from a fetched GGII-sourced article on 2024 collaborative-welding shipment data) instead of just citing something adjacent.
+- The core business-model sentence about direct customers being system integrators/technically-capable manufacturers, with procurement involving production and purchasing departments, had no citation at all. Added `C016` as an explicit inference (industrial-B2B-analogy reasoning, not industry-specific research), with a new gap (`G004`) documenting that no protocol-robot-specific procurement research was found.
+- Three sentences characterized as "已发生事件" (confirmed events) were actually interpretive inferences: the IPO-termination "impact" speculation (was miscited to `C001`, which is unrelated; the real supporting fact -- the 2022 Pre-IPO financing and investor names -- sat in `S001`'s excerpt but had never been promoted to its own claim), "反映国产替代和出海同步推进", and "反映行业整体仍处扩张期". Split into new claims `C012`/`C013`/`C014` with proper `basis_claim_ids` and rationale, moved out of the "已发生事件" section into "推测", and added `C015` for the previously-unclaimed financing/investor fact.
+- `examples/public-industry-case/README.md` still said `schema_version 1.0` (stale since the 1.1 bump in v0.1.3) and an outdated source/search count.
+
+No changes to `scripts/validate_evidence.py` in this release -- `structural_ok: true` before and after, because none of the above are structural violations. That's the point: they required reading the actual claim text and checking it supports what it's cited for, which the tool has never claimed to do.
+
 ## 0.1.5 - 2026-09-03
 
 Fifth round of fixes from continued external review of v0.1.4. Every finding was independently reproduced before fixing.

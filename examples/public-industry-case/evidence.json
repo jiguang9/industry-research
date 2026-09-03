@@ -149,6 +149,22 @@
       "location": null,
       "excerpt": "越疆科技已于2024年12月23日正式在香港交易所主板挂牌上市，成为“中国协作机器人第一股”；IPO发行价每股18.8港元，开盘后市值迅速攀升至80亿港元；截至2026-09-03未披露IPO募资总额。是深圳今年新增的第21家上市公司、第10家港股上市公司；IPO前累计融资约7亿元人民币，投后估值超35亿元人民币。",
       "access_note": "文章发布于挂牌当日，是对上市事件本身的报道，而非此前的招股计划公告（S003发布于2024-07-09，早于上市，只能证明彼时的出货量排名，不能单独作为上市事实的来源）"
+    },
+    {
+      "id": "S009",
+      "title": "GGII：2024年度中国协作焊接机器人市场出货量排行TOP8",
+      "publisher": "腾讯新闻（转引高工机器人产业研究所GGII数据）",
+      "url": "https://news.qq.com/rain/a/20250423A06WBI00",
+      "file_ref": null,
+      "source_type": "research",
+      "access_status": "fetched",
+      "published_at": "2025-04-23",
+      "accessed_at": "2026-09-03",
+      "data_period": "2024-2025（预测）",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "2024年中国协作焊接机器人市场出货量3056台，同比增长119.38%；GGII预计2025年出货量将达4650台。协作机器人在搬运/上下料、装配、拆码垛等场景的应用合计占比超过50%；中大负载协作机器人占比提升明显，主要用于搬运/上下料、拆码垛等应用场景。",
+      "access_note": "文章为财经媒体转引GGII研究所数据，未附GGII原始报告链接"
     }
   ],
   "claims": [
@@ -302,6 +318,90 @@
       "confidence": "low",
       "limitations": ["搜索结果中未出现艾利特IPO状态的媒体报道或交易所公告，S007仅为百科和展会资料，不能作为IPO状态的证据"],
       "metrics": []
+    },
+    {
+      "id": "C011",
+      "statement": "2024年中国协作焊接机器人市场出货量3056台，同比增长119.38%，GGII预计2025年出货量将达4650台；协作机器人在搬运/上下料、装配、拆码垛等场景的应用合计占比超过50%，中大负载机型占比提升明显，主要用于搬运/上下料和拆码垛，协作焊接与大负载协作码垛是当前应用端的两个突出方向。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S009"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "medium",
+      "limitations": ["数字来自财经媒体转引GGII数据，未直接核对GGII原始报告；'应用占比超过50%'的具体统计口径（是出货量还是销售额）未确认"],
+      "metrics": [
+        {"name": "协作焊接机器人出货量", "value": 3056, "unit": "台", "period": "2024", "region": "中国", "scope": "协作焊接细分市场", "value_type": "reported", "source_ids": ["S009"], "missing_dimensions": []},
+        {"name": "协作焊接机器人出货量同比增长率", "value": 119.38, "unit": "%", "period": "2024", "region": "中国", "scope": "协作焊接细分市场", "value_type": "reported", "source_ids": ["S009"], "missing_dimensions": []}
+      ]
+    },
+    {
+      "id": "C012",
+      "statement": "2025年销量增长45.59%、国产份额超90%、出口破万台这三个信号叠加，反映国产替代和出海同步推进的态势。",
+      "kind": "inference",
+      "evidence_status": "partial",
+      "source_ids": [],
+      "counter_source_ids": [],
+      "basis_claim_ids": ["C006"],
+      "rationale": "C006 中三个各自独立报告的数字（销量增速、国产份额、出口量）方向一致，共同指向国产厂商在国内份额扩大的同时也在向海外扩张，因此归纳为'国产替代与出海同步推进'；但这是研究者对三个数字的联合解读，不是来源原文直接给出的结论，来源原文并未使用这一表述。",
+      "confidence": "medium",
+      "limitations": ["为对 C006 三个数字的联合解读，来源未直接作出此表述", "未核实出口目的地结构，'出海'具体指向哪些市场未知"],
+      "metrics": []
+    },
+    {
+      "id": "C013",
+      "statement": "协作机器人行业整体仍处于扩张期，即使头部个别企业（如节卡）出现资本市场受阻。",
+      "kind": "inference",
+      "evidence_status": "partial",
+      "source_ids": [],
+      "counter_source_ids": [],
+      "basis_claim_ids": ["C006", "C003"],
+      "rationale": "C006 显示行业整体销量同比增长45.59%，是判断'整体扩张'的主要依据；C003 显示头部企业节卡IPO受挫，两者对比说明行业增长与个别企业资本市场表现可以脱钩。这是研究者基于两条独立事实的综合判断，不是任一来源直接给出的结论。",
+      "confidence": "medium",
+      "limitations": ["'扩张期'是对销量增速的定性解读，未核实利润、产能利用率等更能反映'扩张'质量的指标"],
+      "metrics": []
+    },
+    {
+      "id": "C014",
+      "statement": "节卡机器人科创板IPO终止可能影响：正在寻求融资的同类企业对上市窗口期的判断，以及已投资该公司的机构（软银愿景基金二期、淡马锡等）的退出路径。",
+      "kind": "inference",
+      "evidence_status": "unverified",
+      "source_ids": [],
+      "counter_source_ids": [],
+      "basis_claim_ids": ["C003", "C015"],
+      "rationale": "C003 显示节卡IPO确已终止，C015 显示软银愿景基金二期、淡马锡等机构在2022年Pre-IPO轮投资了节卡。据此推断：IPO受挫可能影响同类企业对上市窗口期的判断、影响已投资机构的退出路径，这是研究者基于两个事实做出的市场影响推测，本次研究没有任何直接证据（如其他企业的公开表态、投资机构的公开回应）支持这一推测本身是否已经发生或将会发生，因此 evidence_status 为 unverified 而非 partial。",
+      "confidence": "low",
+      "limitations": ["纯属市场影响推测，未找到任何同类企业或相关投资机构对此事件的公开回应，不能验证该推测是否成立"],
+      "metrics": []
+    },
+    {
+      "id": "C015",
+      "statement": "节卡机器人于2022年7月完成Pre-IPO轮融资10亿元，投后估值约35亿元人民币，投资方包括软银愿景基金二期、淡马锡等。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S001"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "high",
+      "limitations": ["数据来自媒体对招股书内容的转述，未直接读取招股书原文"],
+      "metrics": [
+        {"name": "Pre-IPO轮融资金额", "value": 10, "unit": "亿元", "period": "2022-07", "region": null, "scope": "节卡机器人单一企业", "currency": "CNY", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": ["region"]},
+        {"name": "投后估值", "value": 35, "unit": "亿元", "period": "2022-07", "region": null, "scope": "节卡机器人单一企业", "currency": "CNY", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": ["region"]}
+      ]
+    },
+    {
+      "id": "C016",
+      "statement": "协作机器人整机厂商的直接客户通常是系统集成商或有一定技术能力的终端制造企业，而非普通消费者；采购决策涉及生产/工艺部门和采购部门。",
+      "kind": "inference",
+      "evidence_status": "unverified",
+      "source_ids": [],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": "本次研究没有找到协作机器人行业专门的采购流程调研数据，这一描述基于工业自动化设备/工业机器人行业的一般采购模式类比归纳（参考 references/industry-guides/industrial-b2b.md 对工业B2B采购链条的一般性描述），不是针对协作机器人行业单独核实过的事实。",
+      "confidence": "low",
+      "limitations": ["为基于同类工业设备采购模式的类比推断，未找到协作机器人行业专门的采购流程调研或企业访谈数据支持"],
+      "metrics": []
     }
   ],
   "comparisons": [
@@ -333,18 +433,24 @@
       "description": "节卡机器人IPO终止的官方原因未获得交易所或公司层面的正式确认，目前仅有媒体推测",
       "affected_claim_ids": ["C004"],
       "next_step": "查阅上海证券交易所科创板发行上市审核信息公开网站中节卡机器人审核状态变更公告的官方文本"
+    },
+    {
+      "id": "G004",
+      "description": "协作机器人行业专门的采购流程/客户结构调研未找到，报告中关于直接客户与采购部门构成的描述完全基于同类工业设备的类比推断，未经该行业专门数据核实",
+      "affected_claim_ids": ["C016"],
+      "next_step": "查阅协作机器人厂商的招股书'销售模式'章节，或直接联系厂商/系统集成商了解真实采购决策链条"
     }
   ],
   "checks": {
     "semantic_review": {
       "performed": true,
-      "notes": "撰写过程中核对了每条 claim 的数字与来源 excerpt 是否一致；发现搜索引擎摘要曾将GGII的'4.95万台'错误转述为'495万台'，已通过 WebFetch 直接读取原文更正为准确数字，未采用搜索摘要中的错误版本"
+      "notes": "撰写过程中核对了每条 claim 的数字与来源 excerpt 是否一致；发现搜索引擎摘要曾将GGII的'4.95万台'错误转述为'495万台'，已通过 WebFetch 直接读取原文更正为准确数字，未采用搜索摘要中的错误版本。后续一轮外部评审发现 report.md 中存在引用与主张不匹配（[C006] 被误用于支持应用场景描述）、重要判断缺证据编号（客户与采购结构）、以及推断内容混在'已发生事件'小节中三类问题，已逐条修复：补充真实来源 S009/claim C011 支持应用场景描述，新增 C012-C016 把此前隐性的推断和未单独建证据的事实分别独立记录，并把推测性语句移出'已发生事件'小节。"
     },
     "machine_validation": {
       "performed": true,
       "tool": "scripts/validate_evidence.py",
-      "tool_version": "0.1.5",
-      "result": "passed"
+      "tool_version": "0.1.6",
+      "result": "passed_with_warnings"
     }
   }
 }

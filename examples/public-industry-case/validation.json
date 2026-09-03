@@ -2,7 +2,16 @@
   "schema_version_checked": "1.1",
   "structural_ok": true,
   "errors": [],
-  "warnings": [],
+  "warnings": [
+    {
+      "path": "claims[11]",
+      "message": "claim 'C012': no source_ids but evidence_status='partial'"
+    },
+    {
+      "path": "claims[12]",
+      "message": "claim 'C013': no source_ids but evidence_status='partial'"
+    }
+  ],
   "manual_review_required": [
     {
       "path": "$",
