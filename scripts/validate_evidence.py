@@ -34,9 +34,9 @@ from typing import Any
 
 # 1.1: comparisons[].comparison_type became required (v0.1.2) -- a
 # backward-incompatible addition, hence the version bump rather than keeping
-# this at 1.0. A file honestly declaring schema_version=1.0 will now get a
-# version-mismatch warning *and* likely fail on the missing field, instead
-# of silently passing under rules it was never written against.
+# this at 1.0. Any file whose declared schema_version doesn't match this
+# constant fails validation (see validate()) instead of silently passing
+# under rules it was never written against.
 SCHEMA_VERSION = "1.1"
 
 SOURCE_TYPES = {
@@ -219,8 +219,7 @@ def validate_metric(metric: Any, path: str, result: Result, source_ids: set[str]
     unit = _require(metric, "unit", path, result, _is_str)
 
     for dim_field in DIMENSION_FIELDS:
-        if dim_field in metric and not _is_nullable_str(metric[dim_field]):
-            result.error(f"{path}.{dim_field}", "must be a string or null")
+        _require(metric, dim_field, path, result, _is_nullable_str)
 
     value_type = _require(metric, "value_type", path, result, _is_str)
     if value_type is not None and value_type not in VALUE_TYPES:
@@ -258,10 +257,11 @@ def validate_metric(metric: Any, path: str, result: Result, source_ids: set[str]
         inputs = metric.get("inputs")
         if not method or not _is_str(method):
             result.error(f"{path}.method", f"required when value_type='{value_type}'")
-        if not isinstance(inputs, list) or len(inputs) == 0:
-            result.error(f"{path}.inputs", f"must be a non-empty array when value_type='{value_type}'")
-        if "assumptions" not in metric or not isinstance(metric["assumptions"], list):
-            result.error(f"{path}.assumptions", f"must be an array when value_type='{value_type}'")
+        if not isinstance(inputs, list) or len(inputs) == 0 or not all(_is_str(x) for x in inputs):
+            result.error(f"{path}.inputs", f"must be a non-empty array of strings when value_type='{value_type}'")
+        assumptions = metric.get("assumptions")
+        if not isinstance(assumptions, list) or not all(_is_str(x) for x in assumptions):
+            result.error(f"{path}.assumptions", f"must be an array of strings when value_type='{value_type}'")
 
 
 def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[str, dict]:
@@ -332,7 +332,7 @@ def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[s
         if confidence is not None and confidence not in CONFIDENCE_LEVELS:
             result.error(f"{path}.confidence", f"must be one of {sorted(CONFIDENCE_LEVELS)}, got {confidence!r}")
 
-        _require(claim, "limitations", path, result, lambda v: isinstance(v, list))
+        _require(claim, "limitations", path, result, lambda v: isinstance(v, list) and all(_is_str(x) for x in v))
 
         if evidence_status == "supported":
             has_read_source = any(
@@ -446,7 +446,7 @@ def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[st
                 resolved_metrics.append(metrics[idx])
 
         comparable = _require(comp, "comparable", path, result, lambda v: isinstance(v, bool))
-        mismatched = _require(comp, "mismatched_dimensions", path, result, lambda v: isinstance(v, list))
+        mismatched = _require(comp, "mismatched_dimensions", path, result, lambda v: isinstance(v, list) and all(_is_str(x) for x in v))
         if not isinstance(mismatched, list):
             mismatched = []
         elif comparable is True and len(mismatched) > 0:
@@ -517,11 +517,19 @@ def validate_checks(checks: Any, result: Result) -> None:
         return
 
     sem = _require(checks, "semantic_review", "checks", result, lambda v: isinstance(v, dict))
+    if isinstance(sem, dict):
+        _require(sem, "performed", "checks.semantic_review", result, lambda v: isinstance(v, bool))
+        _require(sem, "notes", "checks.semantic_review", result, _is_str)
 
     mach = _require(checks, "machine_validation", "checks", result, lambda v: isinstance(v, dict))
     if isinstance(mach, dict):
-        performed = mach.get("performed")
-        mach_result = mach.get("result")
+        performed = _require(mach, "performed", "checks.machine_validation", result, lambda v: isinstance(v, bool))
+        _require(mach, "tool", "checks.machine_validation", result, _is_str)
+        _require(mach, "tool_version", "checks.machine_validation", result, _is_nullable_str)
+        mach_result = _require(
+            mach, "result", "checks.machine_validation",
+            result, lambda v: v is None or v in ("passed", "passed_with_warnings", "failed"),
+        )
         if performed is False and mach_result is not None:
             result.error(
                 "checks.machine_validation",
@@ -562,7 +570,11 @@ def validate(evidence: Any, report_path: Path | None) -> Result:
     if "schema_version" not in evidence:
         result.error("schema_version", "missing required field 'schema_version'")
     elif evidence["schema_version"] != SCHEMA_VERSION:
-        result.warning("schema_version", f"expected '{SCHEMA_VERSION}', got {evidence['schema_version']!r}")
+        # This validator has no multi-version rule branching -- it always
+        # applies SCHEMA_VERSION's rules. A file declaring any other version
+        # (old, newer, or garbage) can't be vouched for as compliant with
+        # the rules actually being run, so this is an error, not a warning.
+        result.error("schema_version", f"expected '{SCHEMA_VERSION}', got {evidence['schema_version']!r}")
 
     validate_research(evidence.get("research"), result)
 

@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.4 - 2026-09-03
+
+Fourth round of fixes from continued external review of v0.1.3. Every finding was independently reproduced (mutating the valid fixture and confirming the validator wrongly accepted it) before fixing.
+
+- `metrics[].period`/`region`/`scope` could be deleted outright as long as the same field name was added to `missing_dimensions` -- the key-presence check only ran when the key happened to exist. Now enforced as required keys (nullable value) via `_require`, matching the pattern used everywhere else.
+- `checks.semantic_review` and `checks.machine_validation` were only checked for being present and being objects; their internal fields were never validated. A `machine_validation` of `{"performed": "yes", "tool": 123, "tool_version": null, "result": "nonsense"}` passed structural validation. Now `semantic_review.performed`/`.notes` and `machine_validation.performed`/`.tool`/`.tool_version`/`.result` are all individually required and type/enum-checked.
+- Several "array of string" fields only checked list-ness, not element types: `claims[].limitations`, `metrics[].inputs`/`.assumptions` (when `value_type` is calculated/estimated), and `comparisons[].mismatched_dimensions` all accepted non-string elements (e.g. `[123]`). All now check every element is a string.
+- `schema_version` mismatch (including a fabricated/unknown version like `"999.0"`) was only a warning, so `structural_ok` could still read `true` for a file the validator has no actual multi-version support for. Now a hard error -- this validator only knows how to check `SCHEMA_VERSION`'s rules, so it can't vouch for a file declaring anything else.
+- `references/evidence-schema.md`: the top-of-file JSON skeleton still showed `"schema_version": "1.0"` after the header was updated to say 1.1; and the version-history note attributed both the `comparison_type` field and the version bump to v0.1.2, when the bump itself only happened in v0.1.3. Both corrected.
+- 10 new tests target each of the above directly (73 total, up from 65 in v0.1.3).
+
 ## 0.1.3 - 2026-09-03
 
 Third round of fixes from continued external review of v0.1.2. Every finding was independently reproduced (by deleting each field from the valid fixture and confirming the validator wrongly accepted it) before fixing. See `docs/validation-report.md` (section 0) for the full writeup.

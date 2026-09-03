@@ -482,16 +482,26 @@ class RequiredFieldDeletionTests(unittest.TestCase):
 
 class SchemaVersionDisciplineTests(unittest.TestCase):
     """A file honestly declaring schema_version=1.0 (pre-comparison_type)
-    must not be silently accepted by the 1.1 validator -- it should get both
-    a version-mismatch warning and the real missing-field error, not pass."""
+    must not be silently accepted by the 1.1 validator. Fourth-round review
+    finding: a mismatched schema_version (including a fabricated/unknown one
+    like "999.0") used to be only a warning, so structural_ok could still be
+    true; this validator has no multi-version rule branching, so it can't
+    vouch for a file declaring rules it isn't actually checking -- any
+    version mismatch is now a hard error."""
 
     def test_old_schema_version_with_missing_new_field_fails_with_both_signals(self):
         evidence = load("valid_evidence.json")
         evidence["schema_version"] = "1.0"
         del evidence["comparisons"][0]["comparison_type"]
         result = ve.validate(evidence, None)
-        self.assertTrue(any("1.1" in w["message"] for w in result.warnings))
+        self.assertTrue(any("1.1" in m for m in error_messages(result)))
         self.assertTrue(any("comparison_type" in m for m in error_messages(result)))
+
+    def test_unknown_fabricated_schema_version_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["schema_version"] = "999.0"
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("schema_version" in e["path"] for e in result.errors))
 
 
 class ThirdRoundRequiredFieldDeletionTests(unittest.TestCase):
@@ -546,6 +556,75 @@ class ThirdRoundRequiredFieldDeletionTests(unittest.TestCase):
         del evidence["checks"]["machine_validation"]
         result = ve.validate(evidence, None)
         self.assertTrue(any("machine_validation" in m for m in error_messages(result)))
+
+
+class FourthRoundTypeAndKeyBypassTests(unittest.TestCase):
+    """Fourth-round review finding: deleting a dimension field and declaring
+    it in missing_dimensions bypassed key-presence enforcement; checks'
+    sub-object internals had no field-level validation; several
+    array-of-string fields only checked list-ness, not element types."""
+
+    def test_metric_dimension_deleted_and_declared_missing_still_requires_the_key(self):
+        evidence = load("valid_evidence.json")
+        m = evidence["claims"][0]["metrics"][0]
+        for f in ("period", "region", "scope"):
+            m.pop(f, None)
+        m["missing_dimensions"] = ["period", "region", "scope"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(result.errors)
+
+    def test_semantic_review_missing_internal_fields_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        evidence["checks"]["semantic_review"] = {}
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("performed" in m for m in error_messages(result)))
+        self.assertTrue(any("notes" in m for m in error_messages(result)))
+
+    def test_machine_validation_missing_internal_fields_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        evidence["checks"]["machine_validation"] = {}
+        result = ve.validate(evidence, None)
+        self.assertTrue(result.errors)
+
+    def test_machine_validation_wrong_types_are_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["checks"]["machine_validation"] = {
+            "performed": "yes", "tool": 123, "tool_version": None, "result": "nonsense",
+        }
+        result = ve.validate(evidence, None)
+        messages = error_messages(result)
+        self.assertTrue(any("performed" in m for m in messages))
+        self.assertTrue(any("tool" in m for m in messages))
+        self.assertTrue(any("result" in m for m in messages))
+
+    def test_limitations_with_non_string_element_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"][0]["limitations"] = [123]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("limitations" in m for m in error_messages(result)))
+
+    def test_metric_inputs_and_assumptions_with_non_string_elements_are_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"].append({
+            "id": "C099", "statement": "x", "kind": "inference", "evidence_status": "partial",
+            "source_ids": [], "counter_source_ids": [], "basis_claim_ids": [], "rationale": "x",
+            "confidence": "low", "limitations": [], "metrics": [{
+                "name": "x", "value": 1, "unit": "x", "period": "2024", "region": None, "scope": None,
+                "value_type": "estimated", "source_ids": [], "missing_dimensions": ["region", "scope"],
+                "method": "x", "inputs": [123], "assumptions": [456],
+            }],
+        })
+        result = ve.validate(evidence, None)
+        paths = [e["path"] for e in result.errors]
+        self.assertTrue(any("inputs" in p for p in paths))
+        self.assertTrue(any("assumptions" in p for p in paths))
+
+    def test_mismatched_dimensions_with_non_string_element_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["comparisons"][0]["comparable"] = False
+        evidence["comparisons"][0]["mismatched_dimensions"] = [123]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("mismatched_dimensions" in m for m in error_messages(result)))
 
 
 class FixtureInventoryTests(unittest.TestCase):

@@ -2,13 +2,13 @@
 
 本文件是 `evidence.json` 的完整字段参考，供撰写报告和运行 [scripts/validate_evidence.py](../scripts/validate_evidence.py) 时对照。完整可运行的示例见 `tests/fixtures/valid_evidence.json`；结构错误示例见 `tests/fixtures/invalid_*.json`。校验器实现以本文件为准，两者不一致时以校验器代码的实际行为为准并应修订本文件。
 
-**版本历史**：1.1（v0.1.2）在 `comparisons[]` 新增必填字段 `comparison_type`，属于不兼容旧数据的变更，因此单独提升了 schema_version（而不是继续沿用 1.0）。仍声明 `schema_version: "1.0"` 的旧 evidence.json 用当前校验器复验时，会同时收到版本不匹配警告和 `comparison_type` 缺失错误，不会被静默当作合规文件通过。
+**版本历史**：`comparisons[]` 的必填字段 `comparison_type` 在 v0.1.2 引入，schema_version 的提升（1.0 → 1.1）随后在 v0.1.3 补做，两者不属于同一次提交。1.1 属于不兼容旧数据的变更。任何 `schema_version` 不等于当前校验器 `SCHEMA_VERSION` 常量的文件（包括仍声明 `"1.0"` 的旧文件，以及任何未知/伪造版本号）都会被判为结构错误，不会被静默当作合规文件通过。
 
 ## 顶层结构
 
 ```text
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "research": { ... },
   "sources": [ ... ],
   "claims": [ ... ],
