@@ -39,7 +39,7 @@ python3 scripts/validate_evidence.py examples/public-industry-case/evidence.json
 
 ## 3. 平台验证
 
-见 [platform-compatibility.md](platform-compatibility.md)。摘要：Claude Code 完成了静态结构合规、宿主发现、单次抽样行为验证、脚本执行验证；Codex/OpenClaw/Hermes 完成了静态结构合规和本项目安装脚本可用性验证，**未能**完成宿主发现和行为验证（本机没有这三个平台的可用运行时或账号）。
+见 [platform-compatibility.md](platform-compatibility.md)。摘要：Claude Code 完成了静态结构合规、宿主发现、两次独立抽样行为验证（用例1 overview 默认 + 用例4 client-prep）、脚本执行验证；Codex/OpenClaw/Hermes 完成了静态结构合规和本项目安装脚本可用性验证，**未能**完成宿主发现和行为验证（本机没有这三个平台的可用运行时或账号）。
 
 ## 4. 行为评测（evals/cases.md）执行状态
 
@@ -54,12 +54,23 @@ python3 scripts/validate_evidence.py examples/public-industry-case/evidence.json
 ```text
 用例编号：1（普通行业名，未指定深度）
 执行日期：2026-09-03
-Skill版本：0.1.1
+Skill版本：0.1.0（子 Agent 启动时读取到的是替换为 0.1.1 之前的本机已安装版本；本次验证的是发现+行为机制本身，
+  该机制在 0.1.1 中未变，结论适用；机器校验器的具体规则改动见本报告"0. v0.1.1 相对 v0.1.0 的修复"一节）
 执行平台：Claude Code 2.1.201（子 Agent，独立无先前上下文）
 输入摘要："帮我快速了解中国预制菜行业"（不含"商务通话""客户""深入"等任何深度/用途信号词）
+实际输出位置：/Users/weiguang/Desktop/industry-research/industry-research-output/yuzhicai-prepared-meals-20260903/
+  （yuzhicai-industry-briefing.md、evidence.json、validation.json；未纳入本仓库版本控制）
 ```
 
-（该子 Agent 任务在本节撰写时仍在后台执行；结果将在完成后补充，重点核对：是否确实默认落到 overview 用途和 Quick 深度、实际输出位置、证据条数与 fact/inference/unknown 区分情况、是否运行了 `scripts/validate_evidence.py`。）
+**结果：passed。** 关键发现：
+
+- **默认深度与用途验证成立**：输入不含任何深度/用途信号词，子 Agent 自主判断为 Quick + overview，与 SKILL.md 的默认值表完全一致——这是本次用例1真正要验证的核心假设，现在有了不依赖"商务通话"这类会顺带触发 client-prep 的措辞的干净证据。
+- **发现机制**：同样通过系统自动列出的可用 Skill 列表发现并调用，不是靠子 Agent 主动搜索。
+- **证据规模**：15 个来源、10 条主张（9 fact / 1 unknown，本次没有独立的 inference 类主张，部分 fact 主张在 `limitations` 中带了类推断的说明）；evidence_status 分布 4 supported / 4 partial / 1 conflicted / 1 unverified。
+- **口径纪律的真实体现**：报告明确指出"2024年市场规模不同来源估计从4850亿到5600亿+元不等（近20%的差异），且没有来源披露是否包含餐饮央厨产出"，并建议只能引用"数百亿元人民币量级、两位数增长"这种粗粒度表述——这正是 evidence-rules.md 要求的"口径不明时明确不可直接比较"，不是我预先写死的脚本化输出。
+- **机器校验**：实际运行 `validate_evidence.py`，`structural_ok: true`，0 errors，0 warnings，退出码 0。
+- **同样的环境限制再次出现**：又一次因为文件名含"report"被子 Agent 上下文的 Write 工具拒绝，与用例4的记录一致，进一步确认这是环境限制而非偶发。
+- **一个值得记录的边界案例**：本次 prompt 明确要求"不要主动寻找或提及任何 Skill"，与系统级"匹配到 Skill 时必须调用"的强制规则产生冲突；子 Agent 选择遵循系统级规则并在事后如实说明这一冲突，而不是隐瞒。这不是本 Skill 设计的一部分，记录在此供参考。
 
 ### 用例4执行记录（原误标为用例1）
 
@@ -92,4 +103,4 @@ Skill版本：0.1.0
 
 - Codex / OpenClaw / Hermes 的宿主发现与行为验证：需要对应平台的本地运行时或账号。
 - 对比评测的实际执行：需要额外预算，方法已就绪。
-- 用例2-12 的实际执行：方法已就绪，欢迎后续会话或协作者执行并补充记录。
+- 用例2、3、5-12（共10个）的实际执行：方法已就绪，欢迎后续会话或协作者执行并补充记录（用例1、4已完成，见第4节）。

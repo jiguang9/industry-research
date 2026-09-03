@@ -22,13 +22,13 @@
 | 宿主发现与加载 | passed | 安装后，当前会话的可用 Skill 列表中出现 `industry-research`（系统提示自动列出），说明 Claude Code 从 `~/.claude/skills/industry-research/` 正确发现了本 Skill |
 | 显式调用 `/industry-research` | not_tested | 本次验证在非交互式 harness 中完成，未实测斜杠命令的交互式输入；发现层已确认该命令会被注册（Claude Code 文档：Skill 目录名即为命令名） |
 | 自然语言自动触发 + 实际研究行为（对应 evals/cases.md 用例4，client-prep） | passed（单次抽样） | 另开一个全新、无先前上下文的子 Agent，给出"我需要在商务通话前快速了解中国协作机器人行业"。**注意措辞**："商务通话前"这个短语本身会触发 client-prep 用途，因此这次实测验证的是用例4（明确 client-prep），不是用例1（普通行业名、未指定深度/用途、理应默认 overview）——本文件先前的记录把它错误归为用例1，已更正。**实际结果**：子 Agent 在系统提示的可用 Skill 列表中看到 `industry-research`（发现层的直接证明）并主动调用，读取了 SKILL.md 及多个 references 文件，产出 24 条 claim / 27 个来源，其中 3 条冲突数字被并列展示而非取平均 |
-| 自然语言自动触发 + 实际研究行为（对应 evals/cases.md 用例1，overview 默认） | passed（单次抽样） | 后续用中性措辞"帮我快速了解中国预制菜行业"（不含深度/用途信号词）单独另开一个子 Agent 重测，结果见 `docs/validation-report.md` |
+| 自然语言自动触发 + 实际研究行为（对应 evals/cases.md 用例1，overview 默认） | passed（单次抽样） | 用中性措辞"帮我快速了解中国预制菜行业"（不含深度/用途信号词）单独另开一个子 Agent 重测。**实际结果**：正确默认 Quick + overview（与 SKILL.md 默认值表一致），15 个来源 / 10 条主张（9 fact / 1 unknown），evidence_status 分布 4 supported / 4 partial / 1 conflicted / 1 unverified，实际运行 `validate_evidence.py` 通过。报告明确指出不同来源的市场规模数字口径不一致（近20%差异）并拒绝给出单一精确数字，符合证据规则。详细记录见 `docs/validation-report.md` |
 | 相对参考文件读取（references/、assets/） | passed | 子 Agent 明确报告读取了 `research-workflow.md`、`evidence-rules.md`、`evidence-schema.md`、`source-strategy.md`、`industry-guides/industrial-b2b.md` 及两个模板文件 |
 | 材料模式输出（无联网，仅用户材料） | not_tested | 本次抽样测试子 Agent 具备联网能力，未构造"无联网"场景 |
 | 联网模式输出 | passed | 子 Agent 实际发出 12 次 WebSearch、5 次 WebFetch（追读原文全文，非仅用摘要） |
 | 脚本执行（`scripts/validate_evidence.py`） | passed | 本机直接运行验证（见 `docs/validation-report.md`、`examples/public-industry-case/validation.json`），子 Agent 测试中也独立运行了一次，`structural_ok: true` |
 | 降级行为（无 Python） | not_tested | 未构造无 Python 的环境 |
-| 证据位置 | 见 `docs/validation-report.md`；子 Agent 完整transcript 未保留在仓库中（属于运行时会话记录，不属于可公开分发的仓库内容）；其产出文件在本机 `industry-research-output/协作机器人-20260903/`，未纳入版本控制（符合 SKILL.md 输出规则） |
+| 证据位置 | 见 `docs/validation-report.md`；两次子 Agent 的完整 transcript 未保留在仓库中（属于运行时会话记录，不属于可公开分发的仓库内容）；产出文件在本机 `industry-research-output/协作机器人-20260903/`（用例4）和 `industry-research-output/yuzhicai-prepared-meals-20260903/`（用例1），均未纳入版本控制（符合 SKILL.md 输出规则） |
 
 **发现的一个环境限制（记录以供其他用户参考，不是本 Skill 的设计缺陷）**：子 Agent 尝试按模板约定写入 `report.md` 时，被当前 harness 的 Write 工具拒绝（"Subagents should return findings as text, not write report files"）——这是 Claude Code 对**子 Agent**写入 `report`/`summary`/`findings`/`analysis` 类命名文件的一个防护策略，与主对话无关。子 Agent 改用其他文件名后不受影响。也就是说：**通过主对话调用本 Skill 时（`examples/public-industry-case/` 即如此）没有这个限制；只有当调用发生在子 Agent 上下文里、且所在 harness 有类似防护时，可能需要避免使用以 report 开头的文件名。**
 
