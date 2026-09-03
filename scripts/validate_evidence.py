@@ -252,14 +252,25 @@ def validate_metric(metric: Any, path: str, result: Result, source_ids: set[str]
     if isinstance(unit, str) and unit.strip() == "" and "unit" not in missing_set:
         result.error(f"{path}.unit", "unit is empty but not declared in missing_dimensions")
 
+    # currency/price_basis/method/inputs/assumptions are optional keys (may be
+    # entirely absent) for any value_type, but if present they must be the
+    # right type regardless of value_type -- a stray currency=123 on a
+    # 'reported' metric is still wrong, not just when calculated/estimated.
+    for optional_str_field in ("currency", "price_basis", "method"):
+        if optional_str_field in metric:
+            _require(metric, optional_str_field, path, result, _is_nullable_str)
+    for optional_str_array_field in ("inputs", "assumptions"):
+        if optional_str_array_field in metric:
+            _require(metric, optional_str_array_field, path, result, lambda v: isinstance(v, list) and all(_is_str(x) for x in v))
+
     if value_type in ("calculated", "estimated"):
         method = metric.get("method")
         inputs = metric.get("inputs")
+        assumptions = metric.get("assumptions")
         if not method or not _is_str(method):
             result.error(f"{path}.method", f"required when value_type='{value_type}'")
         if not isinstance(inputs, list) or len(inputs) == 0 or not all(_is_str(x) for x in inputs):
             result.error(f"{path}.inputs", f"must be a non-empty array of strings when value_type='{value_type}'")
-        assumptions = metric.get("assumptions")
         if not isinstance(assumptions, list) or not all(_is_str(x) for x in assumptions):
             result.error(f"{path}.assumptions", f"must be an array of strings when value_type='{value_type}'")
 
@@ -426,6 +437,13 @@ def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[st
         metric_refs = _require(comp, "metric_refs", path, result, lambda v: isinstance(v, list))
         resolved_metrics: list[dict] = []
         if isinstance(metric_refs, list):
+            # A comparison is "an actual pair (or more) of numbers being
+            # compared" -- an empty list, a single ref, or the same ref
+            # repeated isn't comparing anything. Reject before resolving.
+            if len(metric_refs) < 2:
+                result.error(f"{path}.metric_refs", f"must reference at least two metrics, got {len(metric_refs)}")
+            elif len(set(metric_refs)) < 2:
+                result.error(f"{path}.metric_refs", "must reference at least two distinct metrics, not the same ref repeated")
             for ref in metric_refs:
                 if not _is_str(ref):
                     result.error(f"{path}.metric_refs", f"ref must be a string, got {ref!r}")

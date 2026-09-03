@@ -104,7 +104,7 @@
 |---|---|---|
 | id | string | 唯一 ID，如 `CMP001` |
 | comparison_type | enum | `time_series`（同一指标跨时期的趋势比较，允许 `period` 不同）/ `cross_sectional`（同一时点下不同对象的横向比较，`period` 也需要一致） |
-| metric_refs | array of string | 格式 `"<claim_id>.<metric_index>"`，例如 `"C002.0"`，指向具体 claim 下 metrics 数组中的某一项 |
+| metric_refs | array of string | 格式 `"<claim_id>.<metric_index>"`，例如 `"C002.0"`，指向具体 claim 下 metrics 数组中的某一项；至少含两个**不同**的引用（不能为空、不能只有一个、不能是同一个引用重复），因为 comparisons 是"实际需要比较的数字组"，没有比较对象时应使用空的顶层 `comparisons: []`，而不是塞一条只指向单个数字的记录 |
 | purpose | string | 比较目的说明 |
 | comparable | boolean | 是否认为这组数字在关键口径上可比 |
 | mismatched_dimensions | array of string | 不一致的口径维度；`comparable=true` 时应为空数组 |

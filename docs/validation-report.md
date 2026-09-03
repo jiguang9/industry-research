@@ -1,6 +1,6 @@
 # 验证记录
 
-版本：0.1.4　记录日期：2026-09-03
+版本：0.1.5　记录日期：2026-09-03
 
 ## 0. 外部评审修复历史
 
@@ -12,7 +12,9 @@
 
 **v0.1.4（相对 v0.1.3）**：第四轮评审指出两类仍未堵上的漏洞：(1) `metrics[].period/region/scope` 只要删除字段本身、同时把字段名写进 `missing_dimensions`，就能绕过"键必须存在"的要求；(2) `checks` 的两个子对象只检查了自己是不是 object，内部字段（`performed`/`notes`/`tool`/`tool_version`/`result`）完全没有类型或存在性检查，`limitations`/`metrics[].inputs`/`.assumptions`/`comparisons[].mismatched_dimensions` 这类"字符串数组"字段也只检查了是不是数组、没检查元素是不是字符串；另外 `schema_version` 不匹配（含伪造的 `"999.0"`）此前只给警告，`structural_ok` 仍可能是 `true`。逐条复现后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.4 条目。
 
-以上四轮修复均**不修改或删除已发布的 `v0.1.0`/`v0.1.1`/`v0.1.2`/`v0.1.3` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.4 修复后的状态更新。
+**v0.1.5（相对 v0.1.4）**：第五轮评审指出两类真实漏洞：(1) `comparisons[].metric_refs` 接受空数组、单个引用、或同一引用重复两次——因为跨 metric 真实核对只在 `resolved_metrics >= 2` 时才运行，这三种"根本没有比较对象"的情况会直接绕过该核对；(2) `metrics[].currency`/`price_basis`/`method`/`inputs`/`assumptions` 只在 `value_type` 为 `calculated`/`estimated` 时被检查类型，`reported` 指标上出现 `currency: 123` 这类错误类型完全不受检查。逐条复现后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.5 条目。
+
+以上五轮修复均**不修改或删除已发布的 `v0.1.0`/`v0.1.1`/`v0.1.2`/`v0.1.3`/`v0.1.4` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.5 修复后的状态更新。
 
 ## 1. 自动化测试
 
@@ -26,8 +28,8 @@ python3 tools/build_release.py
 实际运行结果（本机，macOS 23.5.0 arm64，Python 3.9.6）：
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
-- `python3 -m unittest discover -s tests`：**73 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 name/price_basis/cross_sectional 的 period、comparisons/gaps 重复 ID 检测、machine_validation 字段级校验、research.data_cutoff/claims[].rationale/metrics[].missing_dimensions/顶层comparisons·gaps·checks及其两个子对象删除后必须报错、**metric 维度字段删除+声明missing仍报错**、**checks 两个子对象的内部字段类型/存在性校验**、**limitations/inputs/assumptions/mismatched_dimensions 数组元素类型校验**、**schema_version 不匹配（含伪造版本号）一律报错**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.4.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
+- `python3 -m unittest discover -s tests`：**80 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73 → v0.1.5: 80），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 name/price_basis/cross_sectional 的 period、comparisons/gaps 重复 ID 检测、machine_validation 字段级校验、research.data_cutoff/claims[].rationale/metrics[].missing_dimensions/顶层comparisons·gaps·checks及其两个子对象删除后必须报错、metric 维度字段删除+声明missing仍报错、checks 两个子对象的内部字段类型/存在性校验、limitations/inputs/assumptions/mismatched_dimensions 数组元素类型校验、schema_version 不匹配（含伪造版本号）一律报错、**comparisons 至少两个不同 metric_refs**、**metric 可选字段无论 value_type 都做类型校验**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.5.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 

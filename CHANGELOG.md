@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.5 - 2026-09-03
+
+Fifth round of fixes from continued external review of v0.1.4. Every finding was independently reproduced before fixing.
+
+- `comparisons[].metric_refs` accepted an empty array, a single ref, or the same ref repeated twice -- none of which actually compare anything -- because the real-metric cross-check only ran when `len(resolved_metrics) >= 2`, so these degenerate cases silently skipped it entirely. Now rejected explicitly: a comparison must reference at least two distinct metrics, or the research should use an empty top-level `comparisons: []` instead.
+- `metrics[].currency`, `.price_basis`, `.method`, `.inputs`, `.assumptions` were only type-checked inside the `value_type in (calculated, estimated)` branch, so a `reported` metric with `currency: 123` or `inputs: 123` passed untouched. These are optional fields for any `value_type`, but now their type is checked whenever they're present, regardless of `value_type`.
+- `tests/fixtures/valid_evidence.json`'s comparison referenced a single metric ("仅作格式示范") -- fixed by adding a second same-metric-different-period entry and turning it into a genuine time-series comparison.
+- 14 new tests target each of the above directly (80 total, up from 73 in v0.1.4).
+
 ## 0.1.4 - 2026-09-03
 
 Fourth round of fixes from continued external review of v0.1.3. Every finding was independently reproduced (mutating the valid fixture and confirming the validator wrongly accepted it) before fixing.

@@ -343,7 +343,7 @@
     "machine_validation": {
       "performed": true,
       "tool": "scripts/validate_evidence.py",
-      "tool_version": "0.1.4",
+      "tool_version": "0.1.5",
       "result": "passed"
     }
   }

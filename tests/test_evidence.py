@@ -171,7 +171,12 @@ class CurrencyAndScopeMergeTests(unittest.TestCase):
 
     def test_metric_with_declared_currency_and_no_conversion_is_fine(self):
         evidence = load("valid_evidence.json")
+        # Both compared metrics (C001.0 and C001.1, referenced by CMP001) need
+        # the same currency, or the real-metric cross-check would (correctly)
+        # flag a genuine mismatch -- this test is about the field being legal
+        # to set at all, not about creating a real cross-metric conflict.
         evidence["claims"][0]["metrics"][0]["currency"] = "CNY"
+        evidence["claims"][0]["metrics"][1]["currency"] = "CNY"
         result = ve.validate(evidence, None)
         self.assertEqual(result.errors, [])
 
@@ -625,6 +630,59 @@ class FourthRoundTypeAndKeyBypassTests(unittest.TestCase):
         evidence["comparisons"][0]["mismatched_dimensions"] = [123]
         result = ve.validate(evidence, None)
         self.assertTrue(any("mismatched_dimensions" in m for m in error_messages(result)))
+
+
+class FifthRoundComparisonAndOptionalFieldTests(unittest.TestCase):
+    """Fifth-round review finding: comparisons could reference zero, one, or
+    the same metric twice (nothing was actually being compared); and
+    metric.currency/price_basis/method/inputs/assumptions were only
+    type-checked inside the calculated/estimated branch, so a wrong type on
+    a 'reported' metric slipped through untouched."""
+
+    def test_comparison_with_empty_metric_refs_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["comparisons"][0]["metric_refs"] = []
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("at least two metrics" in m for m in error_messages(result)))
+
+    def test_comparison_with_single_metric_ref_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["comparisons"][0]["metric_refs"] = ["C001.0"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("at least two metrics" in m for m in error_messages(result)))
+
+    def test_comparison_referencing_the_same_metric_twice_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["comparisons"][0]["metric_refs"] = ["C001.0", "C001.0"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("distinct metrics" in m for m in error_messages(result)))
+
+    def test_comparison_with_two_distinct_metrics_is_accepted(self):
+        result = ve.validate(load("valid_evidence.json"), None)
+        self.assertEqual(result.errors, [])
+
+    def test_metric_currency_wrong_type_is_rejected_even_when_reported(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"][0]["metrics"][0]["currency"] = 123
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("currency" in e["path"] for e in result.errors))
+
+    def test_metric_price_basis_wrong_type_is_rejected_even_when_reported(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"][0]["metrics"][0]["price_basis"] = []
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("price_basis" in e["path"] for e in result.errors))
+
+    def test_metric_method_inputs_assumptions_wrong_types_rejected_when_reported(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"][0]["metrics"][0]["method"] = 123
+        evidence["claims"][0]["metrics"][0]["inputs"] = 123
+        evidence["claims"][0]["metrics"][0]["assumptions"] = 123
+        result = ve.validate(evidence, None)
+        paths = [e["path"] for e in result.errors]
+        self.assertTrue(any("method" in p for p in paths))
+        self.assertTrue(any("inputs" in p for p in paths))
+        self.assertTrue(any("assumptions" in p for p in paths))
 
 
 class FixtureInventoryTests(unittest.TestCase):

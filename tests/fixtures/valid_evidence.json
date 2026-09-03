@@ -75,6 +75,17 @@
           "value_type": "reported",
           "source_ids": ["S001"],
           "missing_dimensions": []
+        },
+        {
+          "name": "新增直营门店数",
+          "value": 28,
+          "unit": "家",
+          "period": "2024",
+          "region": "示例市",
+          "scope": "该企业直营门店",
+          "value_type": "reported",
+          "source_ids": ["S001"],
+          "missing_dimensions": []
         }
       ]
     },
@@ -108,9 +119,9 @@
   "comparisons": [
     {
       "id": "CMP001",
-      "comparison_type": "cross_sectional",
-      "metric_refs": ["C001.0"],
-      "purpose": "作为示例，展示单一指标的口径记录（此处无第二个可比数字，仅作字段格式示范）",
+      "comparison_type": "time_series",
+      "metric_refs": ["C001.0", "C001.1"],
+      "purpose": "对比该企业2024年与2025年新增直营门店数，观察扩张速度是否加快",
       "comparable": true,
       "mismatched_dimensions": [],
       "adjustment_note": null
