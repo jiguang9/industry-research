@@ -32,7 +32,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = "1.0"
+# 1.1: comparisons[].comparison_type became required (v0.1.2) -- a
+# backward-incompatible addition, hence the version bump rather than keeping
+# this at 1.0. A file honestly declaring schema_version=1.0 will now get a
+# version-mismatch warning *and* likely fail on the missing field, instead
+# of silently passing under rules it was never written against.
+SCHEMA_VERSION = "1.1"
 
 SOURCE_TYPES = {
     "official", "company", "association", "research",
@@ -126,8 +131,7 @@ def validate_research(research: Any, result: Result) -> None:
     if research_date is not None and not DATE_RE.match(research_date):
         result.error(f"{path}.research_date", "must match YYYY-MM-DD")
 
-    if "data_cutoff" in research and not _is_nullable_str(research["data_cutoff"]):
-        result.error(f"{path}.data_cutoff", "must be a string or null")
+    _require(research, "data_cutoff", path, result, _is_nullable_str)
 
     assumptions = _require(research, "assumptions", path, result, lambda v: isinstance(v, list))
     if isinstance(assumptions, list) and not all(_is_str(a) for a in assumptions):
@@ -228,9 +232,8 @@ def validate_metric(metric: Any, path: str, result: Result, source_ids: set[str]
             if sid not in source_ids:
                 result.error(f"{path}.source_ids", f"references unknown source id '{sid}'")
 
-    missing_dims = metric.get("missing_dimensions", [])
-    if not isinstance(missing_dims, list) or not all(_is_str(d) for d in missing_dims):
-        result.error(f"{path}.missing_dimensions", "must be an array of strings")
+    missing_dims = _require(metric, "missing_dimensions", path, result, lambda v: isinstance(v, list) and all(_is_str(d) for d in v))
+    if not isinstance(missing_dims, list):
         missing_dims = []
     missing_set = set(missing_dims)
 
@@ -298,10 +301,9 @@ def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[s
         if kind == "unknown" and evidence_status == "supported":
             result.error(path, f"claim '{cid}': kind='unknown' cannot have evidence_status='supported'")
 
-        if kind == "inference":
-            rationale = claim.get("rationale")
-            if not rationale or not _is_str(rationale):
-                result.error(f"{path}.rationale", f"claim '{cid}': rationale is required when kind='inference'")
+        rationale = _require(claim, "rationale", path, result, _is_nullable_str)
+        if kind == "inference" and not rationale:
+            result.error(f"{path}.rationale", f"claim '{cid}': rationale must be non-empty when kind='inference'")
 
         c_source_ids = _require(claim, "source_ids", path, result, lambda v: isinstance(v, list))
         resolved_source_ids: list[str] = []
@@ -508,19 +510,16 @@ def validate_gaps(gaps: Any, result: Result, claims_by_id: dict[str, dict]) -> s
 
 def validate_checks(checks: Any, result: Result) -> None:
     if checks is None:
-        result.warning("checks", "no 'checks' object present")
+        result.error("checks", "missing required top-level field 'checks'")
         return
     if not isinstance(checks, dict):
         result.error("checks", "'checks' must be an object")
         return
-    sem = checks.get("semantic_review")
-    if sem is not None and not isinstance(sem, dict):
-        result.error("checks.semantic_review", "must be an object")
 
-    mach = checks.get("machine_validation")
-    if mach is not None and not isinstance(mach, dict):
-        result.error("checks.machine_validation", "must be an object")
-    elif isinstance(mach, dict):
+    sem = _require(checks, "semantic_review", "checks", result, lambda v: isinstance(v, dict))
+
+    mach = _require(checks, "machine_validation", "checks", result, lambda v: isinstance(v, dict))
+    if isinstance(mach, dict):
         performed = mach.get("performed")
         mach_result = mach.get("result")
         if performed is False and mach_result is not None:
@@ -574,8 +573,8 @@ def validate(evidence: Any, report_path: Path | None) -> Result:
     claims_by_id = validate_claims(evidence.get("claims"), result, source_ids)
     detect_cycles(claims_by_id, result)
 
-    validate_comparisons(evidence.get("comparisons", []), result, claims_by_id)
-    gap_ids = validate_gaps(evidence.get("gaps", []), result, claims_by_id)
+    validate_comparisons(evidence.get("comparisons"), result, claims_by_id)
+    gap_ids = validate_gaps(evidence.get("gaps"), result, claims_by_id)
     validate_checks(evidence.get("checks"), result)
 
     if report_path is not None:

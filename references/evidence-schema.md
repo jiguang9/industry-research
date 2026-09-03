@@ -1,6 +1,8 @@
-# evidence.json 字段定义（schema_version 1.0）
+# evidence.json 字段定义（schema_version 1.1）
 
 本文件是 `evidence.json` 的完整字段参考，供撰写报告和运行 [scripts/validate_evidence.py](../scripts/validate_evidence.py) 时对照。完整可运行的示例见 `tests/fixtures/valid_evidence.json`；结构错误示例见 `tests/fixtures/invalid_*.json`。校验器实现以本文件为准，两者不一致时以校验器代码的实际行为为准并应修订本文件。
+
+**版本历史**：1.1（v0.1.2）在 `comparisons[]` 新增必填字段 `comparison_type`，属于不兼容旧数据的变更，因此单独提升了 schema_version（而不是继续沿用 1.0）。仍声明 `schema_version: "1.0"` 的旧 evidence.json 用当前校验器复验时，会同时收到版本不匹配警告和 `comparison_type` 缺失错误，不会被静默当作合规文件通过。
 
 ## 顶层结构
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "research": {
     "industry": "协作机器人（collaborative robot / cobot）整机制造",
     "region": "中国大陆（部分数字为全球口径，已在 metrics.region 中分别标注）",
@@ -343,7 +343,7 @@
     "machine_validation": {
       "performed": true,
       "tool": "scripts/validate_evidence.py",
-      "tool_version": "0.1.2",
+      "tool_version": "0.1.3",
       "result": "passed"
     }
   }

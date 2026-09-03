@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.3 - 2026-09-03
+
+Third round of fixes from continued external review of v0.1.2. Every finding was independently reproduced (by deleting each field from the valid fixture and confirming the validator wrongly accepted it) before fixing. See `docs/validation-report.md` (section 0) for the full writeup.
+
+- `scripts/validate_evidence.py` required-field enforcement was still incomplete: `research.data_cutoff`, `claims[].rationale`, `metrics[].missing_dimensions`, and the top-level `comparisons`/`gaps`/`checks` (plus its two sub-objects `semantic_review`/`machine_validation`) could all be deleted outright with no error -- several fell back to silent empty-list/None defaults via `.get(key, default)`, one (`checks` absent) only produced a warning. All now enforced as required via `_require`.
+- `comparisons[].comparison_type` became required in v0.1.2 without a schema version bump, so a file still declaring `schema_version: "1.0"` had no way to signal it predates the new field, and the validator gave no indication the rules it was applying didn't match the file's own claimed version. Bumped `SCHEMA_VERSION` to `1.1` (documented as a deliberately breaking change in `references/evidence-schema.md`) and updated every schema_version-declaring file in this repo. A file honestly declaring `1.0` now gets both a version-mismatch warning and the real missing-field error, instead of an ambiguous silent pass.
+- `docs/validation-report.md` recorded local absolute filesystem paths (`/Users/<name>/...`) for two eval-run output directories -- replaced with paths relative to the repo root, and added a note that those two runs predate the schema 1.1 bump and would need `comparison_type` added to re-validate under the current validator (the schema evolved; the recorded results were accurate for the validator version in effect at the time).
+- v0.1.2's GitHub release notes said "61 total" new tests; the actual number was 56 (arithmetic error, not a code issue). Corrected via `gh release edit` on the existing v0.1.2 release (text only, no tag/artifact change).
+- 9 new tests target each of the required-field cases directly, plus 1 test for the schema-version-mismatch-plus-real-failure behavior (65 total, up from 56 in v0.1.2).
+
 ## 0.1.2 - 2026-09-03
 
 Second round of fixes from continued external review of v0.1.1. Again, every finding was independently reproduced before fixing. See `docs/validation-report.md` (section 0) for the full writeup.

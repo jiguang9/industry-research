@@ -480,6 +480,74 @@ class RequiredFieldDeletionTests(unittest.TestCase):
         self.assertTrue(any("metrics" in m for m in error_messages(result)))
 
 
+class SchemaVersionDisciplineTests(unittest.TestCase):
+    """A file honestly declaring schema_version=1.0 (pre-comparison_type)
+    must not be silently accepted by the 1.1 validator -- it should get both
+    a version-mismatch warning and the real missing-field error, not pass."""
+
+    def test_old_schema_version_with_missing_new_field_fails_with_both_signals(self):
+        evidence = load("valid_evidence.json")
+        evidence["schema_version"] = "1.0"
+        del evidence["comparisons"][0]["comparison_type"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("1.1" in w["message"] for w in result.warnings))
+        self.assertTrue(any("comparison_type" in m for m in error_messages(result)))
+
+
+class ThirdRoundRequiredFieldDeletionTests(unittest.TestCase):
+    """Third-round review finding: research.data_cutoff, claims[].rationale,
+    metrics[].missing_dimensions, and the top-level comparisons/gaps/checks
+    (plus its two sub-objects) could all be deleted outright with no error."""
+
+    def test_missing_research_data_cutoff_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["research"]["data_cutoff"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("data_cutoff" in m for m in error_messages(result)))
+
+    def test_missing_claim_rationale_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["rationale"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("rationale" in m for m in error_messages(result)))
+
+    def test_missing_metric_missing_dimensions_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["metrics"][0]["missing_dimensions"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("missing_dimensions" in m for m in error_messages(result)))
+
+    def test_missing_top_level_comparisons_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["comparisons"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("comparisons" in m for m in error_messages(result)))
+
+    def test_missing_top_level_gaps_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["gaps"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("gaps" in m for m in error_messages(result)))
+
+    def test_missing_top_level_checks_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["checks"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("checks" in m for m in error_messages(result)))
+
+    def test_missing_checks_semantic_review_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["checks"]["semantic_review"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("semantic_review" in m for m in error_messages(result)))
+
+    def test_missing_checks_machine_validation_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["checks"]["machine_validation"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("machine_validation" in m for m in error_messages(result)))
+
+
 class FixtureInventoryTests(unittest.TestCase):
     def test_fixtures_directory_has_expected_files(self):
         expected = {

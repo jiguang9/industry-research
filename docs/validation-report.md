@@ -1,6 +1,6 @@
 # 验证记录
 
-版本：0.1.2　记录日期：2026-09-03
+版本：0.1.3　记录日期：2026-09-03
 
 ## 0. 外部评审修复历史
 
@@ -8,7 +8,9 @@
 
 **v0.1.2（相对 v0.1.1）**：继续收到第二轮评审，指出 v0.1.1 的修复不完整：跨 metric 核对遗漏了 `name`（GMV vs 收入）和 `price_basis`（名义/实际）两个字段，`period` 被无条件豁免导致横截面比较的时期不一致检测不到；多个 evidence-schema.md 文档中标注为必需的字段（`schema_version`、`sources[].publisher` 等、`claims[].counter_source_ids` 等）删除后校验器仍能通过；公开案例 report.md 第三节仍保留"这个细分行业……尚未普遍形成稳定盈利模式"这一从单一企业数据直接得出的行业级结论，认识2 处的措辞已改但正文这处没有同步。逐条核实后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.2 条目。
 
-以上两轮修复均**不修改或删除已发布的 `v0.1.0`/`v0.1.1` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.2 修复后的状态更新。
+**v0.1.3（相对 v0.1.2）**：第三轮评审指出 v0.1.2 的必需字段执行仍不完整：`research.data_cutoff`、`claims[].rationale`、`metrics[].missing_dimensions`、顶层 `comparisons`/`gaps`/`checks`（及其两个子对象）删除后依然通过；v0.1.2 新增 `comparison_type` 必填字段却没有配套提升 schema_version，导致声明 `1.0` 的旧文件在新规则下的失败没有版本层面的解释；`docs/validation-report.md` 中记录了本机绝对路径；Release 说明文字把测试数量误写成 61（实际 56）。逐条复现（对着合法 fixture 逐字段删除，确认校验器确实放行）后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.3 条目。
+
+以上三轮修复均**不修改或删除已发布的 `v0.1.0`/`v0.1.1`/`v0.1.2` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.3 修复后的状态更新。
 
 ## 1. 自动化测试
 
@@ -22,8 +24,8 @@ python3 tools/build_release.py
 实际运行结果（本机，macOS 23.5.0 arm64，Python 3.9.6）：
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
-- `python3 -m unittest discover -s tests`：**56 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 **name/price_basis/cross_sectional 的 period**、comparisons/gaps 重复 ID 检测、machine_validation.performed/result 一致性、**7 个必需字段删除后必须报错**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.2.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
+- `python3 -m unittest discover -s tests`：**65 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 name/price_basis/cross_sectional 的 period、comparisons/gaps 重复 ID 检测、machine_validation.performed/result 一致性、**research.data_cutoff/claims[].rationale/metrics[].missing_dimensions/顶层comparisons·gaps·checks及其两个子对象删除后必须报错**、**schema_version=1.0 且缺 comparison_type 时同时给出版本警告和缺字段错误**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.3.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 
@@ -62,11 +64,12 @@ Skill版本：0.1.0（子 Agent 启动时读取到的是替换为 0.1.1 之前�
   该机制在后续版本中未变，结论适用；机器校验器的具体规则改动见本报告"0. 外部评审修复历史"一节）
 执行平台：Claude Code 2.1.201（子 Agent，独立无先前上下文）
 输入摘要："帮我快速了解中国预制菜行业"（不含"商务通话""客户""深入"等任何深度/用途信号词）
-实际输出位置：/Users/weiguang/Desktop/industry-research/industry-research-output/yuzhicai-prepared-meals-20260903/
-  （yuzhicai-industry-briefing.md、evidence.json、validation.json；未纳入本仓库版本控制）
+实际输出位置：industry-research-output/yuzhicai-prepared-meals-20260903/（相对本仓库根目录；实际运行时落在协作者本机的仓库检出路径下，
+  未纳入版本控制，不在本文档记录本机绝对路径）
+  （yuzhicai-industry-briefing.md、evidence.json、validation.json）
 ```
 
-**结果：passed。** 关键发现：
+**结果：passed（按运行当时的 schema_version 1.0 + 校验器规则）。** 注意：这次运行发生在 v0.1.2 把 `comparisons[].comparison_type` 提升为必填字段（schema 1.1）之前；其 `evidence.json` 若不补充该字段，用当前版本的 `scripts/validate_evidence.py` 复验会失败，这是 schema 演进的正常结果，不代表下方结论过时或不实——记录的是"当时确实通过了"，见本文件"0. 外部评审修复历史"关于 schema_version 的说明。关键发现：
 
 - **默认深度与用途验证成立**：输入不含任何深度/用途信号词，子 Agent 自主判断为 Quick + overview，与 SKILL.md 的默认值表完全一致——这是本次用例1真正要验证的核心假设，现在有了不依赖"商务通话"这类会顺带触发 client-prep 的措辞的干净证据。
 - **发现机制**：同样通过系统自动列出的可用 Skill 列表发现并调用，不是靠子 Agent 主动搜索。
@@ -84,9 +87,11 @@ Skill版本：0.1.0（子 Agent 启动时读取到的是替换为 0.1.1 之前�
 Skill版本：0.1.0
 执行平台：Claude Code（子 Agent，独立无先前上下文，通过 Agent 工具启动，不知晓本次开发会话的任何内容）
 输入摘要："我需要在商务通话前快速了解中国协作机器人行业，请帮我研究并给出可用的报告"
-实际输出位置：/Users/weiguang/Desktop/industry-research/industry-research-output/协作机器人-20260903/
+实际输出位置：industry-research-output/协作机器人-20260903/（相对本仓库根目录；不在本文档记录本机绝对路径）
   （client-brief.md、evidence.json、validation.json、协作机器人行业研究.md；未纳入本仓库版本控制，
-  属于 .gitignore 中 industry-research-output/ 规则排除的运行产出，符合 SKILL.md"不写入 Skill 安装目录"的要求）
+  属于 .gitignore 中 industry-research-output/ 规则排除的运行产出，符合 SKILL.md"不写入 Skill 安装目录"的要求；
+  同用例1一样，这次运行早于 schema 1.1，其 evidence.json 未含 comparison_type，用当前校验器复验会失败，
+  属于 schema 演进的正常结果）
 ```
 
 **结果：passed。** 关键发现：
