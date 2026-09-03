@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "research": {
+    "industry": "测试：重复ID", "region": "测试", "scope": "测试", "exclusions": "",
+    "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",
+    "data_cutoff": null, "assumptions": [], "status": "partial",
+    "capabilities": {"web_search": true, "file_read": true, "file_write": true, "code_execution": true}
+  },
+  "sources": [
+    {"id": "S001", "title": "来源A", "publisher": null, "url": "https://example.com/a", "file_ref": null,
+     "source_type": "media", "access_status": "fetched", "published_at": null, "accessed_at": "2026-09-03",
+     "data_period": null, "origin_id": null, "location": null, "excerpt": null, "access_note": null},
+    {"id": "S001", "title": "来源B（重复ID）", "publisher": null, "url": "https://example.com/b", "file_ref": null,
+     "source_type": "media", "access_status": "fetched", "published_at": null, "accessed_at": "2026-09-03",
+     "data_period": null, "origin_id": null, "location": null, "excerpt": null, "access_note": null}
+  ],
+  "claims": [],
+  "comparisons": [],
+  "gaps": [],
+  "checks": {"semantic_review": {"performed": false, "notes": ""}, "machine_validation": {"performed": false, "tool": "", "tool_version": null, "result": null}}
+}

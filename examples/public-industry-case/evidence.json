@@ -1,0 +1,317 @@
+{
+  "schema_version": "1.0",
+  "research": {
+    "industry": "协作机器人（collaborative robot / cobot）整机制造",
+    "region": "中国大陆（部分数字为全球口径，已在 metrics.region 中分别标注）",
+    "scope": "协作机器人整机厂商的产品定位、竞争格局、代表企业经营状况与近期资本市场事件；不含机器人核心零部件（减速器、伺服电机）供应商，不含系统集成/应用层企业",
+    "exclusions": "工业机器人整体行业（协作机器人只是其中一个细分）、人形机器人、AGV/AMR",
+    "purpose": "overview",
+    "depth": "quick",
+    "research_date": "2026-09-03",
+    "data_cutoff": "各来源数据期不同，最新为 2026-03-16 发布的 2025 年度销量数据；财务数据最新到 2025 年上半年",
+    "assumptions": [
+      "本次以中国大陆市场为主要研究范围，全球口径数字均在对应 metric 的 region 字段单独标注，不与中国口径数字直接相加或比较",
+      "本次为公开资料研究，未联系企业或行业协会做一手核实，结论受限于可公开检索到的媒体报道和企业公告"
+    ],
+    "status": "partial",
+    "capabilities": {
+      "web_search": true,
+      "file_read": true,
+      "file_write": true,
+      "code_execution": true
+    }
+  },
+  "sources": [
+    {
+      "id": "S001",
+      "title": "节卡机器人冲刺科创板IPO：协作机器人销量不足5000台，获软银、淡马锡投资",
+      "publisher": "界面新闻",
+      "url": "https://www.jiemian.com/article/9424127.html",
+      "file_ref": null,
+      "source_type": "media",
+      "access_status": "fetched",
+      "published_at": "2023-05-18",
+      "accessed_at": "2026-09-03",
+      "data_period": "2020-2022",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "2020-2022年协作机器人销量599/2267/3579台；营业收入0.48/1.75/2.81亿元；扣非净利润-2612.91万/-1846.38万/4.4万元；2022年7月Pre-IPO轮融资10亿元，投后估值约35亿元，投资方含软银愿景基金二期、淡马锡。",
+      "access_note": null
+    },
+    {
+      "id": "S002",
+      "title": "节卡机器人“卡”在了哪里？IPO梦碎后明星资本何去何从",
+      "publisher": "新浪财经",
+      "url": "https://finance.sina.com.cn/stock/s/2025-12-22/doc-inhcsexf4575422.shtml",
+      "file_ref": null,
+      "source_type": "media",
+      "access_status": "fetched",
+      "published_at": "2025-12-22",
+      "accessed_at": "2026-09-03",
+      "data_period": "2022-2025H1",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "IPO于2025年12月19日状态变更为终止；2025年1-6月营业收入1.74亿元，净利润-1996.56万元，同比下滑513.55%；扣非净利润2022年4.40万元、2023年-3567.93万元、2024年-227.82万元；市场观点认为终止原因涉及收入确认合规性与经营可持续性。",
+      "access_note": null
+    },
+    {
+      "id": "S003",
+      "title": "越疆港股IPO征途中遇劲敌：节卡机器人挑战声震耳欲聋",
+      "publisher": "南方财经网",
+      "url": "https://www.sfccn.com/2024/7-9/zMMDE0MDRfMTkzMjUzMw.html",
+      "file_ref": null,
+      "source_type": "media",
+      "access_status": "fetched",
+      "published_at": "2024-07-09",
+      "accessed_at": "2026-09-03",
+      "data_period": "2023",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "引用灼识咨询报告：按2023年出货量，优傲机器人（丹麦）全球第一，越疆全球第二（全球份额13%，出货量1.6万台，中国公司中排名第一，与第一名份额仅差1.8个百分点），遨博智能全球第三，节卡全球第五。",
+      "access_note": null
+    },
+    {
+      "id": "S004",
+      "title": "GGII：2025年度中国协作机器人品牌销量排行TOP10",
+      "publisher": "东方财富网（财富号，转引高工机器人产业研究所GGII数据）",
+      "url": "https://caifuhao.eastmoney.com/news/20260316141047259743880",
+      "file_ref": null,
+      "source_type": "research",
+      "access_status": "fetched",
+      "published_at": "2026-03-16",
+      "accessed_at": "2026-09-03",
+      "data_period": "2025",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "2025年中国协作机器人市场销量约4.95万台，同比增长45.59%；国产品牌占据中国市场超90%份额；2025年协作机器人出口突破万台；GGII预计2026年销量有望突破6万台。",
+      "access_note": "文章为财经媒体转引GGII研究所数据，未附GGII原始报告链接，具体品牌TOP10排行图表内容未能完整读取"
+    },
+    {
+      "id": "S005",
+      "title": "“协作机器人第一股”节卡股份闯关IPO：行业过剩下的产能扩张“悖论”",
+      "publisher": "21世纪经济报道",
+      "url": "https://www.21jingji.com/article/20240130/herald/598e4bf2fb58fdaffad208fff475784d.html",
+      "file_ref": null,
+      "source_type": "media",
+      "access_status": "snippet_only",
+      "published_at": "2024-01-30",
+      "accessed_at": "2026-09-03",
+      "data_period": "2023-2024",
+      "origin_id": null,
+      "location": null,
+      "excerpt": null,
+      "access_note": "仅通过搜索引擎摘要获知标题与大致论点（行业产能扩张与过剩并存），未读取全文，不作为具体数字的支持来源"
+    },
+    {
+      "id": "S006",
+      "title": "2026-2031年中国协作机器人行业市场前瞻与投资战略规划分析报告（及同类研究机构报告摘要）",
+      "publisher": "前瞻产业研究院 / 华经产业研究院（经搜索引擎摘要转述）",
+      "url": "https://www.huaon.com/channel/trend/1156418.html",
+      "file_ref": null,
+      "source_type": "research",
+      "access_status": "snippet_only",
+      "published_at": null,
+      "accessed_at": "2026-09-03",
+      "data_period": "2026（预测）",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "搜索摘要提及：预计2026年全球协作机器人销售规模达12.6万台，中国协作机器人销量将扩大至6.47万台左右。",
+      "access_note": "仅有搜索引擎摘要，未确认该数字的具体计算方法、样本范围与原始报告全文，不能与GGII的实际销量统计直接比较"
+    },
+    {
+      "id": "S007",
+      "title": "艾利特智能机器人股份有限公司 百科词条及展会资料",
+      "publisher": "百度百科 / productronica Shanghai 展商资料",
+      "url": "https://baike.baidu.com/item/%E8%89%BE%E5%88%A9%E7%89%B9%E6%99%BA%E8%83%BD%E6%9C%BA%E5%99%A8%E4%BA%BA%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/67131195",
+      "file_ref": null,
+      "source_type": "other",
+      "access_status": "snippet_only",
+      "published_at": null,
+      "accessed_at": "2026-09-03",
+      "data_period": "2025",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "全球累计销售台数超10000台，覆盖50余个国家；2025年产品进入32个国家和地区，海外销量占比47%。",
+      "access_note": "百科词条与展商资料非一手财务/监管披露来源，且未查证到该企业当前IPO/上市状态的可靠信息"
+    }
+  ],
+  "claims": [
+    {
+      "id": "C001",
+      "statement": "节卡机器人（协作机器人厂商）2020-2022年协作机器人销量从599台增长到3579台，营业收入从0.48亿元增长到2.81亿元。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S001"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "high",
+      "limitations": ["数据来自媒体对招股书内容的转述，未直接读取招股书原文"],
+      "metrics": [
+        {"name": "协作机器人销量", "value": 599, "unit": "台", "period": "2020", "region": null, "scope": "节卡机器人单一企业", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": ["region"]},
+        {"name": "协作机器人销量", "value": 3579, "unit": "台", "period": "2022", "region": null, "scope": "节卡机器人单一企业", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": ["region"]},
+        {"name": "营业收入", "value": 0.48, "unit": "亿元", "period": "2020", "region": null, "scope": "节卡机器人单一企业整体营收（非仅协作机器人产品线）", "currency": "CNY", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": ["region"]},
+        {"name": "营业收入", "value": 2.81, "unit": "亿元", "period": "2022", "region": null, "scope": "节卡机器人单一企业整体营收（非仅协作机器人产品线）", "currency": "CNY", "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": ["region"]}
+      ]
+    },
+    {
+      "id": "C002",
+      "statement": "节卡机器人2022年扣非净利润接近盈亏平衡（4.4万元），此后转为持续亏损：2023年-3567.93万元，2024年-227.82万元，2025年上半年-1996.56万元（同比下滑513.55%）。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S001", "S002"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "high",
+      "limitations": ["两个来源均为媒体转述，未直接核对招股书或问询函回复原文中的完整财务附注"],
+      "metrics": [
+        {"name": "扣非净利润", "value": 0.000044, "unit": "亿元", "period": "2022", "region": null, "scope": "节卡机器人单一企业", "currency": "CNY", "value_type": "reported", "source_ids": ["S001", "S002"], "missing_dimensions": ["region"]},
+        {"name": "扣非净利润", "value": -0.356793, "unit": "亿元", "period": "2023", "region": null, "scope": "节卡机器人单一企业", "currency": "CNY", "value_type": "reported", "source_ids": ["S002"], "missing_dimensions": ["region"]},
+        {"name": "净利润", "value": -0.199656, "unit": "亿元", "period": "2025H1", "region": null, "scope": "节卡机器人单一企业，归属于母公司股东净利润", "currency": "CNY", "value_type": "reported", "source_ids": ["S002"], "missing_dimensions": ["region"]}
+      ]
+    },
+    {
+      "id": "C003",
+      "statement": "节卡机器人科创板IPO已于2025年12月19日状态变更为终止，历时约两年上市审核过程未能完成。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S002"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "high",
+      "limitations": [],
+      "metrics": []
+    },
+    {
+      "id": "C004",
+      "statement": "交易所或公司层面均未公开发布关于此次IPO终止的正式原因说明；市场分析认为可能与收入确认合规性问题、经营可持续性存疑有关，但这属于媒体推测而非官方结论。",
+      "kind": "inference",
+      "evidence_status": "partial",
+      "source_ids": ["S002"],
+      "counter_source_ids": [],
+      "basis_claim_ids": ["C002", "C003"],
+      "rationale": "S002原文明确写的是“市场观点认为”，并非交易所或公司的正式公告说法，结合C002显示的持续亏损趋势，两个市场猜测的原因（收入确认合规性、经营可持续性）在财务表现上有一定可信度，但缺乏监管机构或公司官方声明的直接印证，因此保留为推断而非事实。",
+      "confidence": "low",
+      "limitations": ["未找到上交所或节卡机器人官方对终止原因的正式说明"],
+      "metrics": []
+    },
+    {
+      "id": "C005",
+      "statement": "按2023年协作机器人出货量，全球前五名依次为优傲机器人（丹麦，第一）、越疆（中国，第二，全球份额13%，出货量1.6万台）、遨博智能（中国，第三）、[第四名未披露]、节卡（中国，第五）；越疆是2023年出货量口径下中国厂商中排名最高的。",
+      "kind": "fact",
+      "evidence_status": "partial",
+      "source_ids": ["S003"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "medium",
+      "limitations": ["排名与份额数字来自灼识咨询报告经媒体转述，未直接读取灼识咨询原始报告；第四名企业信息缺失"],
+      "metrics": [
+        {"name": "协作机器人出货量", "value": 16000, "unit": "台", "period": "2023", "region": "全球", "scope": "越疆单一企业", "value_type": "reported", "source_ids": ["S003"], "missing_dimensions": []},
+        {"name": "全球市场份额", "value": 13, "unit": "%", "period": "2023", "region": "全球", "scope": "越疆单一企业占全球协作机器人出货量的份额", "value_type": "reported", "source_ids": ["S003"], "missing_dimensions": []}
+      ]
+    },
+    {
+      "id": "C006",
+      "statement": "2025年中国协作机器人市场销量约4.95万台，同比增长45.59%；国产品牌占据中国市场超过90%的份额；同年出口量突破1万台。",
+      "kind": "fact",
+      "evidence_status": "partial",
+      "source_ids": ["S004"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "medium",
+      "limitations": ["数字来自财经媒体转引GGII研究所数据，未直接查阅GGII原始报告全文核对统计口径（是否含出口量、是否为终端销量还是出厂量）"],
+      "metrics": [
+        {"name": "协作机器人市场销量", "value": 49500, "unit": "台", "period": "2025", "region": "中国", "scope": "行业整体销量", "value_type": "reported", "source_ids": ["S004"], "missing_dimensions": []},
+        {"name": "同比增长率", "value": 45.59, "unit": "%", "period": "2025", "region": "中国", "scope": "行业整体销量同比", "value_type": "reported", "source_ids": ["S004"], "missing_dimensions": []},
+        {"name": "国产品牌市场份额", "value": {"min": 90, "max": 100}, "unit": "%", "period": "2025", "region": "中国", "scope": "按销量计的国产品牌份额", "value_type": "reported", "source_ids": ["S004"], "missing_dimensions": []}
+      ]
+    },
+    {
+      "id": "C007",
+      "statement": "另有研究机构预测2026年中国协作机器人销量约6.47万台、全球约12.6万台；这是一个独立的前瞻性预测数字，其方法论未经核实，不应与C006中GGII发布的2025年实际销量数字直接相加或对比增速。",
+      "kind": "unknown",
+      "evidence_status": "unverified",
+      "source_ids": ["S006"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "low",
+      "limitations": ["仅有搜索引擎摘要，未读取原始报告，无法确认统计口径、样本与计算方法是否与GGII一致"],
+      "metrics": [
+        {"name": "预测销量", "value": 64700, "unit": "台", "period": "2026（预测）", "region": "中国", "scope": "行业整体预测销量", "value_type": "estimated", "source_ids": ["S006"], "missing_dimensions": [], "method": "研究机构预测方法未披露，仅知结论数字", "inputs": ["S006摘要中的结论数字"], "assumptions": ["假设该机构的预测方法与GGII不同，未做交叉验证"]}
+      ]
+    },
+    {
+      "id": "C008",
+      "statement": "行业头部企业中至少有一家（越疆）已完成境内外资本市场上市（2024年12月于港交所主板），另一家（节卡）在两年审核后于2025年底终止科创板IPO；这表明协作机器人行业内不同企业的资本化进程和经营状况存在明显分化，不能将“行业景气度高”简单等同于“所有主要厂商都能顺利上市”。",
+      "kind": "inference",
+      "evidence_status": "partial",
+      "source_ids": ["S002", "S003"],
+      "counter_source_ids": [],
+      "basis_claim_ids": ["C003", "C005"],
+      "rationale": "C003显示节卡IPO终止，C005显示越疆已是2023年出货量口径下的中国龙头且据公开信息已于2024年底完成港股上市（该上市事实来自研究过程中的检索线索，未在本证据表中单独建立为claim，因此本推断的强度标为partial而非supported）。两者对比说明同一细分行业内部，企业间的资本市场表现可能差异很大，不能一概而论。",
+      "confidence": "medium",
+      "limitations": ["越疆上市本身未在本证据表中单独列为已核实事实，仅作为研究过程中的背景信息使用"],
+      "metrics": []
+    },
+    {
+      "id": "C009",
+      "statement": "艾利特机器人当前是否已启动或完成A股/港股上市程序，本次研究未能查证到可靠信息。",
+      "kind": "unknown",
+      "evidence_status": "unverified",
+      "source_ids": [],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "low",
+      "limitations": ["搜索结果中未出现艾利特IPO状态的媒体报道或交易所公告，S007仅为百科和展会资料，不能作为IPO状态的证据"],
+      "metrics": []
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "CMP001",
+      "metric_refs": ["C006.0", "C007.0"],
+      "purpose": "2025年GGII实际销量数字与另一机构2026年预测销量数字，容易被误当作同一趋势下的连续数字直接比较增速",
+      "comparable": false,
+      "mismatched_dimensions": ["period", "value_type", "source_methodology"],
+      "adjustment_note": "C006为2025年实际销量（reported），C007为2026年预测销量（estimated），且两者出自不同研究机构、方法论均未公开核实，不能直接相减或计算增速"
+    }
+  ],
+  "gaps": [
+    {
+      "id": "G001",
+      "description": "缺少除节卡以外其他主要厂商（越疆、遨博、艾利特、大族机器人等）近1-2年的详细财务数据（营收、利润、毛利率）",
+      "affected_claim_ids": ["C005", "C009"],
+      "next_step": "查阅越疆科技港股招股书及2025年年报、遨博智能等企业若有的公开披露文件"
+    },
+    {
+      "id": "G002",
+      "description": "GGII 2025年度销量数据的原始报告全文未获取，无法确认统计口径（出厂量/终端销量、是否含出口）与品牌TOP10具体排名数字",
+      "affected_claim_ids": ["C006"],
+      "next_step": "尝试通过高工机器人产业研究所官网或付费渠道获取报告原文"
+    },
+    {
+      "id": "G003",
+      "description": "节卡机器人IPO终止的官方原因未获得交易所或公司层面的正式确认，目前仅有媒体推测",
+      "affected_claim_ids": ["C004"],
+      "next_step": "查阅上海证券交易所科创板发行上市审核信息公开网站中节卡机器人审核状态变更公告的官方文本"
+    }
+  ],
+  "checks": {
+    "semantic_review": {
+      "performed": true,
+      "notes": "撰写过程中核对了每条 claim 的数字与来源 excerpt 是否一致；发现搜索引擎摘要曾将GGII的'4.95万台'错误转述为'495万台'，已通过 WebFetch 直接读取原文更正为准确数字，未采用搜索摘要中的错误版本"
+    },
+    "machine_validation": {
+      "performed": true,
+      "tool": "scripts/validate_evidence.py",
+      "tool_version": "0.1.0",
+      "result": "passed"
+    }
+  }
+}

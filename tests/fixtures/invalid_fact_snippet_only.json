@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "research": {
+    "industry": "测试：仅靠摘要来源却标supported", "region": "测试", "scope": "测试", "exclusions": "",
+    "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",
+    "data_cutoff": null, "assumptions": [], "status": "partial",
+    "capabilities": {"web_search": true, "file_read": true, "file_write": true, "code_execution": true}
+  },
+  "sources": [
+    {"id": "S001", "title": "只读到摘要的来源", "publisher": null, "url": "https://example.com/a", "file_ref": null,
+     "source_type": "media", "access_status": "snippet_only", "published_at": null, "accessed_at": "2026-09-03",
+     "data_period": null, "origin_id": null, "location": null, "excerpt": null, "access_note": "需要订阅"}
+  ],
+  "claims": [
+    {"id": "C001", "statement": "仅凭搜索摘要就声称已证实的事实", "kind": "fact", "evidence_status": "supported",
+     "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
+     "confidence": "high", "limitations": [], "metrics": []}
+  ],
+  "comparisons": [],
+  "gaps": [],
+  "checks": {"semantic_review": {"performed": false, "notes": ""}, "machine_validation": {"performed": false, "tool": "", "tool_version": null, "result": null}}
+}

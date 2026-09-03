@@ -1,0 +1,7 @@
+# Development dependencies for this repository.
+#
+# scripts/validate_evidence.py, tools/*.py, and tests/*.py currently use only
+# the Python 3.9+ standard library -- nothing here is required to run them.
+# This file exists as the place to add a dev-only dependency (e.g. PyYAML for
+# a stricter frontmatter parser) if one becomes necessary; do not add runtime
+# dependencies for the core research workflow itself.

@@ -1,0 +1,13 @@
+{
+  "schema_version_checked": "1.0",
+  "structural_ok": true,
+  "errors": [],
+  "warnings": [],
+  "manual_review_required": [
+    {
+      "path": "$",
+      "message": "structural validation passed; source authenticity and citation accuracy still require human review"
+    }
+  ],
+  "disclaimer": "This report only confirms internal structure and declared consistency. It does not verify source authenticity, citation accuracy, or the correctness of any industry conclusion."
+}

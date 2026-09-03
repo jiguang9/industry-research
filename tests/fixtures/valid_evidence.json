@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "research": {
+    "industry": "示例：连锁咖啡馆（测试用虚构数据，非真实研究）",
+    "region": "示例市",
+    "scope": "连锁直营门店的选址与坪效",
+    "exclusions": "不含咖啡豆种植与烘焙环节",
+    "purpose": "overview",
+    "depth": "quick",
+    "research_date": "2026-09-03",
+    "data_cutoff": "2025-12-31",
+    "assumptions": ["地区为示例假设，非真实市场"],
+    "status": "partial",
+    "capabilities": {
+      "web_search": true,
+      "file_read": true,
+      "file_write": true,
+      "code_execution": true
+    }
+  },
+  "sources": [
+    {
+      "id": "S001",
+      "title": "示例年报（虚构）",
+      "publisher": "示例咖啡集团",
+      "url": "https://example.com/annual-report-2025",
+      "file_ref": null,
+      "source_type": "company",
+      "access_status": "fetched",
+      "published_at": "2026-03-15",
+      "accessed_at": "2026-09-03",
+      "data_period": "2025",
+      "origin_id": null,
+      "location": "第三章 经营情况",
+      "excerpt": "2025 年新增直营门店 40 家，同店销售额同比增长 3%。",
+      "access_note": null
+    },
+    {
+      "id": "S002",
+      "title": "示例行业报道（虚构，仅摘要可读）",
+      "publisher": "示例财经媒体",
+      "url": "https://example.com/news/coffee-chain-2026",
+      "file_ref": null,
+      "source_type": "media",
+      "access_status": "snippet_only",
+      "published_at": "2026-01-10",
+      "accessed_at": "2026-09-03",
+      "data_period": "2025",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "报道摘要提及行业整体门店数量持续增长。",
+      "access_note": "原文需要订阅，仅能读取搜索引擎摘要"
+    }
+  ],
+  "claims": [
+    {
+      "id": "C001",
+      "statement": "该企业 2025 年新增直营门店 40 家。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S001"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "high",
+      "limitations": [],
+      "metrics": [
+        {
+          "name": "新增直营门店数",
+          "value": 40,
+          "unit": "家",
+          "period": "2025",
+          "region": "示例市",
+          "scope": "该企业直营门店",
+          "value_type": "reported",
+          "source_ids": ["S001"],
+          "missing_dimensions": []
+        }
+      ]
+    },
+    {
+      "id": "C002",
+      "statement": "考虑到新增门店数量和同店销售额均为正增长，推断该企业 2025 年处于扩张期。",
+      "kind": "inference",
+      "evidence_status": "partial",
+      "source_ids": ["S001"],
+      "counter_source_ids": [],
+      "basis_claim_ids": ["C001"],
+      "rationale": "新增门店数量为正 [C001]，且同店销售额同比增长，两个信号共同指向扩张而非收缩，但样本仅为单一年度，不足以判断长期趋势。",
+      "confidence": "medium",
+      "limitations": ["仅覆盖单一年度数据，未覆盖后续季度"],
+      "metrics": []
+    },
+    {
+      "id": "C003",
+      "statement": "该企业下一年度的门店扩张计划规模尚不明确。",
+      "kind": "unknown",
+      "evidence_status": "unverified",
+      "source_ids": [],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "low",
+      "limitations": ["未找到官方披露的下一年度计划"],
+      "metrics": []
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "CMP001",
+      "metric_refs": ["C001.0"],
+      "purpose": "作为示例，展示单一指标的口径记录（此处无第二个可比数字，仅作字段格式示范）",
+      "comparable": true,
+      "mismatched_dimensions": [],
+      "adjustment_note": null
+    }
+  ],
+  "gaps": [
+    {
+      "id": "G001",
+      "description": "缺少下一年度门店扩张计划的官方披露",
+      "affected_claim_ids": ["C003"],
+      "next_step": "查阅企业下一次投资者交流活动纪要或下一份年报"
+    }
+  ],
+  "checks": {
+    "semantic_review": {
+      "performed": true,
+      "notes": "人工核对了 C001 与来源原文摘录一致"
+    },
+    "machine_validation": {
+      "performed": false,
+      "tool": "scripts/validate_evidence.py",
+      "tool_version": null,
+      "result": null
+    }
+  }
+}

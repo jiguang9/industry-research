@@ -1,0 +1,6 @@
+interface:
+  display_name: "industry-research"
+  short_description: "研究行业结构、商业模式和近期变化，为客户沟通与业务探索提供有据可查的准备材料"
+  default_prompt: "使用 $industry-research 帮我研究这个行业，解释它如何运转，并给出有来源的关键判断和下一步问题。"
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "research": {
+    "industry": "测试：比较自相矛盾", "region": "测试", "scope": "测试", "exclusions": "",
+    "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",
+    "data_cutoff": null, "assumptions": [], "status": "partial",
+    "capabilities": {"web_search": true, "file_read": true, "file_write": true, "code_execution": true}
+  },
+  "sources": [
+    {"id": "S001", "title": "来源A", "publisher": null, "url": "https://example.com/a", "file_ref": null,
+     "source_type": "media", "access_status": "fetched", "published_at": null, "accessed_at": "2026-09-03",
+     "data_period": null, "origin_id": null, "location": null, "excerpt": null, "access_note": null}
+  ],
+  "claims": [
+    {"id": "C001", "statement": "指标A", "kind": "fact", "evidence_status": "supported",
+     "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
+     "confidence": "high", "limitations": [],
+     "metrics": [
+       {"name": "指标A", "value": 100, "unit": "万元", "period": "2025", "region": "测试市", "scope": "测试范围",
+        "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": []}
+     ]},
+    {"id": "C002", "statement": "指标B", "kind": "fact", "evidence_status": "supported",
+     "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
+     "confidence": "high", "limitations": [],
+     "metrics": [
+       {"name": "指标B", "value": 200, "unit": "美元", "period": "2025", "region": "测试市", "scope": "测试范围",
+        "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": []}
+     ]}
+  ],
+  "comparisons": [
+    {"id": "CMP001", "metric_refs": ["C001.0", "C002.0"], "purpose": "测试：单位不同却声称可比",
+     "comparable": true, "mismatched_dimensions": ["unit", "currency"], "adjustment_note": null}
+  ],
+  "gaps": [],
+  "checks": {"semantic_review": {"performed": false, "notes": ""}, "machine_validation": {"performed": false, "tool": "", "tool_version": null, "result": null}}
+}

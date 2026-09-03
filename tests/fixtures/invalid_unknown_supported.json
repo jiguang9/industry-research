@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "research": {
+    "industry": "测试：unknown却标supported", "region": "测试", "scope": "测试", "exclusions": "",
+    "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",
+    "data_cutoff": null, "assumptions": [], "status": "partial",
+    "capabilities": {"web_search": true, "file_read": true, "file_write": true, "code_execution": true}
+  },
+  "sources": [],
+  "claims": [
+    {"id": "C001", "statement": "未知但被标为已证实", "kind": "unknown", "evidence_status": "supported",
+     "source_ids": [], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
+     "confidence": "low", "limitations": [], "metrics": []}
+  ],
+  "comparisons": [],
+  "gaps": [],
+  "checks": {"semantic_review": {"performed": false, "notes": ""}, "machine_validation": {"performed": false, "tool": "", "tool_version": null, "result": null}}
+}
