@@ -204,6 +204,128 @@ class SameOriginSourcesTests(unittest.TestCase):
         self.assertEqual(result.errors, [])
 
 
+class CrossMetricComparisonIntegrityTests(unittest.TestCase):
+    """The validator must not just trust an author's self-declared
+    comparable/mismatched_dimensions -- it must resolve the referenced
+    metrics and check whether they actually agree."""
+
+    def _two_claims_with_metrics(self, evidence, metric_a, metric_b):
+        evidence["claims"] = []
+        evidence["gaps"] = []
+        evidence["claims"].append({
+            "id": "C001", "statement": "A", "kind": "fact", "evidence_status": "supported",
+            "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
+            "confidence": "high", "limitations": [], "metrics": [metric_a],
+        })
+        evidence["claims"].append({
+            "id": "C002", "statement": "B", "kind": "fact", "evidence_status": "supported",
+            "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
+            "confidence": "high", "limitations": [], "metrics": [metric_b],
+        })
+        return evidence
+
+    def test_undeclared_currency_mismatch_with_comparable_true_is_rejected(self):
+        """Exact adversarial case from review: CNY vs USD, same-ish period,
+        declared comparable=true. The validator must catch this by actually
+        comparing the metrics, not just by trusting mismatched_dimensions=[]."""
+        evidence = load("valid_evidence.json")
+        metric_a = {
+            "name": "revenue", "value": 100, "unit": "亿元", "period": "2024", "region": "中国",
+            "scope": "公司整体", "value_type": "reported", "source_ids": ["S001"],
+            "missing_dimensions": [], "currency": "CNY",
+        }
+        metric_b = {
+            "name": "revenue", "value": 14, "unit": "billion", "period": "2025", "region": "中国",
+            "scope": "公司整体", "value_type": "reported", "source_ids": ["S001"],
+            "missing_dimensions": [], "currency": "USD",
+        }
+        evidence = self._two_claims_with_metrics(evidence, metric_a, metric_b)
+        evidence["comparisons"] = [{
+            "id": "CMP999", "metric_refs": ["C001.0", "C002.0"],
+            "purpose": "adversarial: undeclared CNY vs USD and unit mismatch, claimed comparable",
+            "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
+        }]
+        result = ve.validate(evidence, None)
+        messages = error_messages(result)
+        self.assertTrue(any("currency" in m and "comparable=true" in m for m in messages), messages)
+        self.assertTrue(any("unit" in m and "comparable=true" in m for m in messages), messages)
+
+    def test_declaring_the_real_mismatch_in_mismatched_dimensions_is_accepted(self):
+        """The same mismatch, but honestly declared with comparable=false,
+        must not be rejected -- proving this isn't just a blanket ban on
+        differing units."""
+        evidence = load("valid_evidence.json")
+        metric_a = {
+            "name": "revenue", "value": 100, "unit": "亿元", "period": "2024", "region": "中国",
+            "scope": "公司整体", "value_type": "reported", "source_ids": ["S001"],
+            "missing_dimensions": [], "currency": "CNY",
+        }
+        metric_b = {
+            "name": "revenue", "value": 14, "unit": "billion", "period": "2025", "region": "中国",
+            "scope": "公司整体", "value_type": "reported", "source_ids": ["S001"],
+            "missing_dimensions": [], "currency": "USD",
+        }
+        evidence = self._two_claims_with_metrics(evidence, metric_a, metric_b)
+        evidence["comparisons"] = [{
+            "id": "CMP999", "metric_refs": ["C001.0", "C002.0"],
+            "purpose": "honestly declared currency/unit mismatch",
+            "comparable": False, "mismatched_dimensions": ["currency", "unit"], "adjustment_note": None,
+        }]
+        result = ve.validate(evidence, None)
+        self.assertEqual(result.errors, [])
+
+
+class DuplicateComparisonAndGapIdTests(unittest.TestCase):
+    def test_duplicate_comparison_id_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        comp = {
+            "id": "CMP001", "metric_refs": ["C001.0"], "purpose": "dup test A",
+            "comparable": True, "mismatched_dimensions": [], "adjustment_note": None,
+        }
+        evidence["comparisons"] = [dict(comp), dict(comp, purpose="dup test B")]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("duplicate comparison id" in m for m in error_messages(result)))
+
+    def test_duplicate_gap_id_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        gap = {"id": "G001", "description": "dup", "affected_claim_ids": [], "next_step": "check X"}
+        evidence["gaps"] = [dict(gap), dict(gap, description="dup again")]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("duplicate gap id" in m for m in error_messages(result)))
+
+    def test_gap_missing_next_step_is_an_error_not_just_a_warning(self):
+        evidence = load("valid_evidence.json")
+        evidence["gaps"] = [{"id": "G001", "description": "no next step given", "affected_claim_ids": [], "next_step": ""}]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("next_step" in e["path"] for e in result.errors))
+
+
+class MachineValidationConsistencyTests(unittest.TestCase):
+    def test_performed_false_with_a_result_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["checks"]["machine_validation"] = {
+            "performed": False, "tool": "scripts/validate_evidence.py", "tool_version": None, "result": "passed",
+        }
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("performed=false but result=" in m for m in error_messages(result)))
+
+    def test_performed_true_without_a_valid_result_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["checks"]["machine_validation"] = {
+            "performed": True, "tool": "scripts/validate_evidence.py", "tool_version": "0.1.0", "result": None,
+        }
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("performed=true requires result" in m for m in error_messages(result)))
+
+    def test_performed_true_with_passed_result_is_accepted(self):
+        evidence = load("valid_evidence.json")
+        evidence["checks"]["machine_validation"] = {
+            "performed": True, "tool": "scripts/validate_evidence.py", "tool_version": "0.1.0", "result": "passed",
+        }
+        result = ve.validate(evidence, None)
+        self.assertEqual(result.errors, [])
+
+
 class FixtureInventoryTests(unittest.TestCase):
     def test_fixtures_directory_has_expected_files(self):
         expected = {

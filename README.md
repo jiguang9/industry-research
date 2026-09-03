@@ -28,7 +28,7 @@ python3 tools/install.py --platform claude    # 或 codex / openclaw / hermes
 |---|---|---|---|
 | Claude Code | `~/.claude/skills/industry-research/` | 输入 `/industry-research`，或直接描述任务让 Claude 自动触发 | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
 | Codex | `~/.agents/skills/industry-research/` | CLI/IDE 中输入 `$industry-research`；ChatGPT Work 中 `@industry-research` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
-| OpenClaw | `~/.openclaw/skills/industry-research/` | `openclaw skills list` 确认发现后，`/skill industry-research <任务>`；也可 `openclaw skills install git:jiguang9/industry-research@v0.1.0` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
+| OpenClaw | `~/.openclaw/skills/industry-research/` | `openclaw skills list` 确认发现后，`/skill industry-research <任务>`；也可 `openclaw skills install git:jiguang9/industry-research@v0.1.1` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
 | Hermes Agent | `~/.hermes/skills/industry-research/` | 让当前 Agent 列出/描述其技能确认发现后，`/industry-research <任务>` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
 
 自定义 profile、远程环境或项目级安装，用 `--dest` 指定确切目标目录：

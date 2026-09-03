@@ -12,7 +12,7 @@
 
 ## Claude Code
 
-- 版本：本机 Claude Code（通过本次会话所用的 harness），2026-09-03
+- 版本：Claude Code VSCode 扩展 **2.1.201**（darwin-arm64，取自 `~/.vscode/extensions/anthropic.claude-code-2.1.201-darwin-arm64/package.json` 的 `version` 字段，2026-09-03 核对；本机没有独立安装的 `claude` CLI 二进制，无法交叉核对 CLI 版本号是否一致）
 - OS：macOS (Darwin 23.5.0, arm64)
 - 安装位置：`~/.claude/skills/industry-research/`（`python3 tools/install.py --platform claude` 安装，随后用 `--replace` 覆盖了一份 2026-09-03 16:44 创建的、内容不同的旧版本，旧版本已备份到 `~/.industry-research-backups/claude-20260903T095226Z/`，未纳入本仓库）
 
@@ -21,7 +21,8 @@
 | 静态结构合规 | passed | `tools/check_skill.py` 通过；frontmatter `name: industry-research` 正确；相对引用全部可解析 |
 | 宿主发现与加载 | passed | 安装后，当前会话的可用 Skill 列表中出现 `industry-research`（系统提示自动列出），说明 Claude Code 从 `~/.claude/skills/industry-research/` 正确发现了本 Skill |
 | 显式调用 `/industry-research` | not_tested | 本次验证在非交互式 harness 中完成，未实测斜杠命令的交互式输入；发现层已确认该命令会被注册（Claude Code 文档：Skill 目录名即为命令名） |
-| 自然语言自动触发 + 实际研究行为 | passed（单次抽样） | 另开一个全新、无先前上下文的子 Agent（通过 Agent 工具启动，不知晓本次开发会话），只给出"我需要在商务通话前快速了解中国协作机器人行业"这类自然语言请求，观察其是否自行发现并使用本 Skill。**实际结果**：子 Agent 在系统提示的可用 Skill 列表中看到 `industry-research`（发现层的直接证明）并主动调用，读取了 SKILL.md 及多个 references 文件，产出 24 条 claim / 27 个来源，其中 3 条冲突数字被并列展示而非取平均。这是一次抽样验证，不代表所有措辞下都稳定触发 |
+| 自然语言自动触发 + 实际研究行为（对应 evals/cases.md 用例4，client-prep） | passed（单次抽样） | 另开一个全新、无先前上下文的子 Agent，给出"我需要在商务通话前快速了解中国协作机器人行业"。**注意措辞**："商务通话前"这个短语本身会触发 client-prep 用途，因此这次实测验证的是用例4（明确 client-prep），不是用例1（普通行业名、未指定深度/用途、理应默认 overview）——本文件先前的记录把它错误归为用例1，已更正。**实际结果**：子 Agent 在系统提示的可用 Skill 列表中看到 `industry-research`（发现层的直接证明）并主动调用，读取了 SKILL.md 及多个 references 文件，产出 24 条 claim / 27 个来源，其中 3 条冲突数字被并列展示而非取平均 |
+| 自然语言自动触发 + 实际研究行为（对应 evals/cases.md 用例1，overview 默认） | passed（单次抽样） | 后续用中性措辞"帮我快速了解中国预制菜行业"（不含深度/用途信号词）单独另开一个子 Agent 重测，结果见 `docs/validation-report.md` |
 | 相对参考文件读取（references/、assets/） | passed | 子 Agent 明确报告读取了 `research-workflow.md`、`evidence-rules.md`、`evidence-schema.md`、`source-strategy.md`、`industry-guides/industrial-b2b.md` 及两个模板文件 |
 | 材料模式输出（无联网，仅用户材料） | not_tested | 本次抽样测试子 Agent 具备联网能力，未构造"无联网"场景 |
 | 联网模式输出 | passed | 子 Agent 实际发出 12 次 WebSearch、5 次 WebFetch（追读原文全文，非仅用摘要） |
@@ -47,7 +48,7 @@
 
 - 安装位置（默认，管理型目录）：`~/.openclaw/skills/industry-research/`
 - 调用：`openclaw skills list` / `openclaw skills info industry-research` 确认发现；`/skill industry-research <任务>` 调用
-- Git 直接安装：`openclaw skills install git:jiguang9/industry-research@v0.1.0`——该命令要求"`SKILL.md` 位于源仓库根目录"，本仓库正好符合这一结构（单 Skill、仓库根目录即 Skill 根目录），因此理论上应可用；但由于本机没有 OpenClaw 运行时，**该命令本身未实际执行验证**
+- Git 直接安装：`openclaw skills install git:jiguang9/industry-research@v0.1.1`——该命令要求"`SKILL.md` 位于源仓库根目录"，本仓库正好符合这一结构（单 Skill、仓库根目录即 Skill 根目录），因此理论上应可用；但由于本机没有 OpenClaw 运行时，**该命令本身未实际执行验证**
 
 | 层次 | 状态 | 说明 |
 |---|---|---|
@@ -59,7 +60,8 @@
 
 - 安装位置（默认 profile）：`~/.hermes/skills/industry-research/`
 - 调用：让当前 Agent 列出/描述其技能确认发现后，`/industry-research <任务>`
-- GitHub 直接安装：官方文档描述的格式是 `hermes skills install owner/repo/skills/<name>`，即期望仓库内有 `skills/<name>/SKILL.md` 这样的子路径。**本仓库是单 Skill、SKILL.md 位于仓库根目录，不符合这个子路径形态**，因此 `hermes skills install jiguang9/industry-research/skills/industry-research` 这类命令**不适用**，本文档不虚构一个能跑通的子路径命令。Hermes 用户应改用：`git clone` 本仓库后运行 `tools/install.py --platform hermes`，或直接用文档中的"Direct URL"方式安装单个 `SKILL.md`（`hermes skills install https://raw.githubusercontent.com/jiguang9/industry-research/main/SKILL.md`，该方式只会拉到 `SKILL.md` 本身，不含 `references/`、`assets/`、`scripts/`，因此**不推荐**，仍建议用 `tools/install.py`）
+- GitHub 直接安装：官方文档描述的格式是 `hermes skills install owner/repo/skills/<name>`，即期望仓库内有 `skills/<name>/SKILL.md` 这样的子路径。**本仓库是单 Skill、SKILL.md 位于仓库根目录，不符合这个子路径形态**，因此 `hermes skills install jiguang9/industry-research/skills/industry-research` 这类命令**不适用**，本文档不虚构一个能跑通的子路径命令。
+- Direct URL 安装（`hermes skills install https://raw.githubusercontent.com/jiguang9/industry-research/main/SKILL.md`）：**2026-09-03 重新核对官方文档后更正**——该方式并非只拉取 `SKILL.md` 单个文件，文档原文为"Hermes also fetches explicitly referenced files under `references/`, `templates/`, `scripts/`, `assets/`, and `examples/`, then scans and installs the complete bundle"。本仓库 SKILL.md 中以 Markdown 链接形式引用了 `references/*.md`、`assets/*.md` 和 `scripts/validate_evidence.py`，这部分预期能被 Hermes 的引用扫描一并拉取；**但这只是基于文档描述的推断，Direct URL 安装的实际行为本次未在真实 Hermes 环境中验证**。仍建议优先使用 `git clone` 后运行 `tools/install.py --platform hermes`，可确定性地保证 `references/`、`assets/`、`scripts/` 全部到位。
 
 | 层次 | 状态 | 说明 |
 |---|---|---|

@@ -3,8 +3,20 @@
 
 Packages exactly the files listed by tools/_manifest.py under a single
 top-level `industry-research/` directory (so `SKILL.md` sits directly inside
-it), and writes a SHA256SUMS.txt alongside the zip. No dev-only files
-(tests/, tools/, evals/, docs/, examples/, .github/, .git) are included.
+it). No dev-only files (tests/, tools/, evals/, docs/, examples/, .github/,
+.git) are included.
+
+Produces two separate checksum artifacts, deliberately not merged into one
+file, because they verify two different things at two different times:
+
+  - SHA256SUMS.txt (next to the zip): the hash of the *downloaded zip
+    itself*. Run `shasum -a 256 -c SHA256SUMS.txt` right after downloading,
+    before extracting anything -- it only lists the zip, so it does not fail
+    with "no such file" errors for paths that don't exist yet.
+  - industry-research/MANIFEST.sha256 (inside the zip): per-file hashes of
+    the extracted payload, meant to be run *after* extracting, from inside
+    the extracted industry-research/ directory
+    (`cd industry-research && shasum -a 256 -c MANIFEST.sha256`).
 
 Usage:
     python3 tools/build_release.py [--out-dir dist]
@@ -35,18 +47,19 @@ def build(out_dir: Path) -> tuple[Path, Path]:
         raise SystemExit("error: manifest resolved to zero files; refusing to build an empty release")
 
     digests: dict[str, str] = {}
+    for rel in files:
+        digests[rel.as_posix()] = hashlib.sha256((REPO_ROOT / rel).read_bytes()).hexdigest()
+
+    manifest_lines = [f"{digests[rel]}  {rel}" for rel in sorted(digests)]
+    manifest_content = "\n".join(manifest_lines) + "\n"
+
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for rel in files:
-            src = REPO_ROOT / rel
-            arcname = f"{SKILL_NAME}/{rel.as_posix()}"
-            zf.write(src, arcname)
-            digests[arcname] = hashlib.sha256(src.read_bytes()).hexdigest()
+            zf.write(REPO_ROOT / rel, f"{SKILL_NAME}/{rel.as_posix()}")
+        zf.writestr(f"{SKILL_NAME}/MANIFEST.sha256", manifest_content)
 
     zip_digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
-    with sums_path.open("w", encoding="utf-8") as f:
-        f.write(f"{zip_digest}  {zip_path.name}\n")
-        for arcname in sorted(digests):
-            f.write(f"{digests[arcname]}  {arcname}\n")
+    sums_path.write_text(f"{zip_digest}  {zip_path.name}\n", encoding="utf-8")
 
     return zip_path, sums_path
 

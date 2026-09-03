@@ -397,7 +397,17 @@ def detect_cycles(claims_by_id: dict[str, dict], result: Result) -> None:
             visit(cid, [])
 
 
+# Dimensions compared directly between the metrics a comparison references.
+# 'period' is deliberately excluded here -- a comparison is allowed to declare
+# comparable=true across different periods (that's what a time-series trend
+# comparison is). Everything else must actually match if comparable=true;
+# author-declared mismatched_dimensions is cross-checked against these real
+# values instead of being trusted at face value.
+METRIC_COMPARISON_FIELDS = ("unit", "currency", "region", "scope", "value_type")
+
+
 def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[str, dict]) -> None:
+    seen_ids: set[str] = set()
     if not isinstance(comparisons, list):
         result.error("comparisons", "'comparisons' must be an array (use [] if empty)")
         return
@@ -408,10 +418,17 @@ def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[st
             result.error(path, "each comparison must be an object")
             continue
 
-        _require(comp, "id", path, result, _is_str)
+        cid = _require(comp, "id", path, result, _is_str)
+        if cid is not None:
+            if cid in seen_ids:
+                result.error(path, f"duplicate comparison id '{cid}'")
+            else:
+                seen_ids.add(cid)
+
         _require(comp, "purpose", path, result, _is_str)
 
         metric_refs = _require(comp, "metric_refs", path, result, lambda v: isinstance(v, list))
+        resolved_metrics: list[dict] = []
         if isinstance(metric_refs, list):
             for ref in metric_refs:
                 if not _is_str(ref):
@@ -427,20 +444,39 @@ def validate_comparisons(comparisons: Any, result: Result, claims_by_id: dict[st
                     continue
                 idx = int(m.group("index"))
                 metrics = claim.get("metrics", [])
-                if idx >= len(metrics):
+                if idx >= len(metrics) or not isinstance(metrics[idx], dict):
                     result.error(f"{path}.metric_refs", f"ref '{ref}' index out of range")
+                    continue
+                resolved_metrics.append(metrics[idx])
 
         comparable = _require(comp, "comparable", path, result, lambda v: isinstance(v, bool))
-        mismatched = comp.get("mismatched_dimensions", [])
+        mismatched = _require(comp, "mismatched_dimensions", path, result, lambda v: isinstance(v, list))
         if not isinstance(mismatched, list):
-            result.error(f"{path}.mismatched_dimensions", "must be an array")
+            mismatched = []
         elif comparable is True and len(mismatched) > 0:
             result.error(path, "comparable=true but mismatched_dimensions is non-empty (contradiction)")
         elif comparable is False and len(mismatched) == 0:
             result.warning(path, "comparable=false but mismatched_dimensions is empty; consider explaining why")
 
-        if "adjustment_note" in comp and not _is_nullable_str(comp["adjustment_note"]):
-            result.error(f"{path}.adjustment_note", "must be a string or null")
+        # Cross-check the actual referenced metrics against the declared
+        # comparable/mismatched_dimensions instead of trusting the author's
+        # self-report: if the underlying metrics genuinely differ in unit,
+        # currency, region, scope, or value_type, comparable=true is wrong
+        # regardless of what mismatched_dimensions claims.
+        if len(resolved_metrics) >= 2 and comparable is True:
+            baseline = resolved_metrics[0]
+            for field in METRIC_COMPARISON_FIELDS:
+                baseline_val = baseline.get(field)
+                for other in resolved_metrics[1:]:
+                    other_val = other.get(field)
+                    if baseline_val != other_val and field not in mismatched:
+                        result.error(
+                            path,
+                            f"comparable=true but referenced metrics actually differ in '{field}' "
+                            f"({baseline_val!r} vs {other_val!r}); this was not declared in mismatched_dimensions",
+                        )
+
+        _require(comp, "adjustment_note", path, result, _is_nullable_str)
 
 
 def validate_gaps(gaps: Any, result: Result, claims_by_id: dict[str, dict]) -> set[str]:
@@ -455,15 +491,16 @@ def validate_gaps(gaps: Any, result: Result, claims_by_id: dict[str, dict]) -> s
             continue
         gid = _require(gap, "id", path, result, _is_str)
         if gid is not None:
-            gap_ids.add(gid)
+            if gid in gap_ids:
+                result.error(path, f"duplicate gap id '{gid}'")
+            else:
+                gap_ids.add(gid)
         _require(gap, "description", path, result, _is_str)
         next_step = gap.get("next_step")
         if not next_step or not _is_str(next_step):
-            result.warning(f"{path}.next_step", "should describe a concrete next verification step")
-        affected = gap.get("affected_claim_ids", [])
-        if not isinstance(affected, list):
-            result.error(f"{path}.affected_claim_ids", "must be an array")
-        else:
+            result.error(f"{path}.next_step", "must be a non-empty string describing a concrete next verification step")
+        affected = _require(gap, "affected_claim_ids", path, result, lambda v: isinstance(v, list))
+        if isinstance(affected, list):
             for cid in affected:
                 if cid not in claims_by_id:
                     result.error(f"{path}.affected_claim_ids", f"references unknown claim id '{cid}'")
@@ -480,9 +517,24 @@ def validate_checks(checks: Any, result: Result) -> None:
     sem = checks.get("semantic_review")
     if sem is not None and not isinstance(sem, dict):
         result.error("checks.semantic_review", "must be an object")
+
     mach = checks.get("machine_validation")
     if mach is not None and not isinstance(mach, dict):
         result.error("checks.machine_validation", "must be an object")
+    elif isinstance(mach, dict):
+        performed = mach.get("performed")
+        mach_result = mach.get("result")
+        if performed is False and mach_result is not None:
+            result.error(
+                "checks.machine_validation",
+                f"performed=false but result={mach_result!r}; a validator that was not run cannot have a result "
+                "(if you are about to run it, set performed=true and result after the run, not before)",
+            )
+        if performed is True and mach_result not in ("passed", "passed_with_warnings", "failed"):
+            result.error(
+                "checks.machine_validation",
+                f"performed=true requires result to be one of passed/passed_with_warnings/failed, got {mach_result!r}",
+            )
 
 
 def validate_report_references(report_path: Path, known_ids: set[str], result: Result) -> None:

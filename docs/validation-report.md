@@ -1,6 +1,10 @@
 # 验证记录
 
-版本：0.1.0　记录日期：2026-09-03
+版本：0.1.1　记录日期：2026-09-03
+
+## 0. v0.1.1 相对 v0.1.0 的修复（外部评审驱动）
+
+v0.1.0 发布后收到一份具体、可复现的外部评审，指出 5 类真实问题（校验器未做跨字段真实性核对、安装器失败恢复路径不安全、公开案例违反自身证据边界、Release 校验文件在解压前必然失败、评测用例1的措辞实际触发了用例4而非用例1）以及一处文档过时判断（Hermes Direct URL 安装范围）。逐条核实后全部确认为真实问题并已修复，详见 `CHANGELOG.md` 的 0.1.1 条目。本文件下方的内容已按修复后的状态更新；**不修改或删除已发布的 `v0.1.0` tag**，问题记录保留在 git 历史中。
 
 ## 1. 自动化测试
 
@@ -14,8 +18,8 @@ python3 tools/build_release.py
 实际运行结果（本机，macOS 23.5.0 arm64，Python 3.9.6）：
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
-- `python3 -m unittest discover -s tests`：**35 个测试，全部通过**，覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装）、`tools/build_release.py`（zip 结构、SHA256、解压后相对引用可解析、不含开发文件）。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.0.zip` 与 `SHA256SUMS.txt`。
+- `python3 -m unittest discover -s tests`：**45 个测试，全部通过**，覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、**跨 metric 真实一致性核对**、**comparisons/gaps 重复 ID 检测**、**machine_validation.performed/result 一致性**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、**--replace 失败恢复的故障注入测试**）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。加粗部分为 0.1.1 新增，直接对应外部评审发现的问题。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.1.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 
@@ -41,10 +45,23 @@ python3 scripts/validate_evidence.py examples/public-industry-case/evidence.json
 
 | 用例编号 | 状态 | 说明 |
 |---|---|---|
-| 1（普通行业名，未指定深度） | **已执行** | 通过一个全新、无先前上下文的子 Agent 完成，见下方"用例1执行记录" |
-| 2-12 | 设计完成，本次未执行 | 已在 `evals/cases.md` 中定义好用例和检查点，可供后续会话或协作者执行；不编造未执行用例的结果 |
+| 1（普通行业名，未指定深度） | **已执行** | 用中性措辞"帮我快速了解中国预制菜行业"（不含深度/用途信号词）单独测试，见下方"用例1执行记录（更正版）" |
+| 4（明确 client-prep） | **已执行**（原先被误标为用例1） | 见下方"用例4执行记录"。**更正说明**：本报告最初把这次执行记为"用例1"，但输入措辞"我需要在商务通话前快速了解……"本身会触发 client-prep 用途，实际验证的是用例4而非用例1；已重新执行一次真正中性措辞的用例1（见上一行），不依赖这次的结果冒充用例1通过 |
+| 2、3、5-12 | 设计完成，本次未执行 | 已在 `evals/cases.md` 中定义好用例和检查点，可供后续会话或协作者执行；不编造未执行用例的结果 |
 
-### 用例1执行记录
+### 用例1执行记录（更正版）
+
+```text
+用例编号：1（普通行业名，未指定深度）
+执行日期：2026-09-03
+Skill版本：0.1.1
+执行平台：Claude Code 2.1.201（子 Agent，独立无先前上下文）
+输入摘要："帮我快速了解中国预制菜行业"（不含"商务通话""客户""深入"等任何深度/用途信号词）
+```
+
+（该子 Agent 任务在本节撰写时仍在后台执行；结果将在完成后补充，重点核对：是否确实默认落到 overview 用途和 Quick 深度、实际输出位置、证据条数与 fact/inference/unknown 区分情况、是否运行了 `scripts/validate_evidence.py`。）
+
+### 用例4执行记录（原误标为用例1）
 
 ```text
 用例编号：1（普通行业名，未指定深度；实际触发为 client-prep，因输入措辞含"商务通话前"）

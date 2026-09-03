@@ -133,6 +133,22 @@
       "location": null,
       "excerpt": "全球累计销售台数超10000台，覆盖50余个国家；2025年产品进入32个国家和地区，海外销量占比47%。",
       "access_note": "百科词条与展商资料非一手财务/监管披露来源，且未查证到该企业当前IPO/上市状态的可靠信息"
+    },
+    {
+      "id": "S008",
+      "title": "越疆科技港交所上市，深圳南山诞生“协作机器人第一股”",
+      "publisher": "新浪财经",
+      "url": "https://finance.sina.com.cn/roll/2024-12-23/doc-ineancvn9219941.shtml",
+      "file_ref": null,
+      "source_type": "media",
+      "access_status": "fetched",
+      "published_at": "2024-12-23",
+      "accessed_at": "2026-09-03",
+      "data_period": "2024-12-23",
+      "origin_id": null,
+      "location": null,
+      "excerpt": "越疆科技已于2024年12月23日正式在香港交易所主板挂牌上市，成为“中国协作机器人第一股”；IPO发行价每股18.8港元，开盘后市值迅速攀升至80亿港元；截至2026-09-03未披露IPO募资总额。是深圳今年新增的第21家上市公司、第10家港股上市公司；IPO前累计融资约7亿元人民币，投后估值超35亿元人民币。",
+      "access_note": "文章发布于挂牌当日，是对上市事件本身的报道，而非此前的招股计划公告（S003发布于2024-07-09，早于上市，只能证明彼时的出货量排名，不能单独作为上市事实的来源）"
     }
   ],
   "claims": [
@@ -247,16 +263,32 @@
     },
     {
       "id": "C008",
-      "statement": "行业头部企业中至少有一家（越疆）已完成境内外资本市场上市（2024年12月于港交所主板），另一家（节卡）在两年审核后于2025年底终止科创板IPO；这表明协作机器人行业内不同企业的资本化进程和经营状况存在明显分化，不能将“行业景气度高”简单等同于“所有主要厂商都能顺利上市”。",
+      "statement": "行业头部企业中至少有一家（越疆）已完成境内外资本市场上市（2024年12月23日于港交所主板），另一家（节卡）在两年审核后于2025年底终止科创板IPO；这表明协作机器人行业内不同企业的资本化进程和经营状况存在明显分化，不能将“行业景气度高”简单等同于“所有主要厂商都能顺利上市”。这一分化判断目前仅基于两家企业的对比，样本有限。",
       "kind": "inference",
       "evidence_status": "partial",
-      "source_ids": ["S002", "S003"],
+      "source_ids": ["S002", "S003", "S008"],
       "counter_source_ids": [],
-      "basis_claim_ids": ["C003", "C005"],
-      "rationale": "C003显示节卡IPO终止，C005显示越疆已是2023年出货量口径下的中国龙头且据公开信息已于2024年底完成港股上市（该上市事实来自研究过程中的检索线索，未在本证据表中单独建立为claim，因此本推断的强度标为partial而非supported）。两者对比说明同一细分行业内部，企业间的资本市场表现可能差异很大，不能一概而论。",
+      "basis_claim_ids": ["C003", "C005", "C010"],
+      "rationale": "C003显示节卡IPO终止，C005显示越疆是2023年出货量口径下的中国龙头，C010（独立证实、已读原文）显示越疆已于2024年12月23日正式在港交所主板挂牌上市。三者对比说明同一细分行业内部，企业间的资本市场表现可能差异很大，不能一概而论。仍标为partial而非supported，是因为“分化”这一判断本身建立在仅两家企业的对比之上，样本量小，不代表行业整体分布。",
       "confidence": "medium",
-      "limitations": ["越疆上市本身未在本证据表中单独列为已核实事实，仅作为研究过程中的背景信息使用"],
+      "limitations": ["仅基于两家企业（越疆、节卡）的对比，样本有限，不能推断为行业普遍的分化模式"],
       "metrics": []
+    },
+    {
+      "id": "C010",
+      "statement": "越疆科技已于2024年12月23日正式在香港交易所主板挂牌上市，IPO发行价每股18.8港元，挂牌当日开盘后市值一度达约80亿港元。",
+      "kind": "fact",
+      "evidence_status": "supported",
+      "source_ids": ["S008"],
+      "counter_source_ids": [],
+      "basis_claim_ids": [],
+      "rationale": null,
+      "confidence": "high",
+      "limitations": ["市值为挂牌当日盘中数据，非收盘或此后某一时点的市值，不代表当前市值"],
+      "metrics": [
+        {"name": "IPO发行价", "value": 18.8, "unit": "港元/股", "period": "2024-12-23", "region": "中国香港", "scope": "越疆科技H股", "currency": "HKD", "value_type": "reported", "source_ids": ["S008"], "missing_dimensions": []},
+        {"name": "挂牌当日开盘后市值", "value": 8000000000, "unit": "港元", "period": "2024-12-23", "region": "中国香港", "scope": "越疆科技整体", "currency": "HKD", "value_type": "reported", "source_ids": ["S008"], "missing_dimensions": []}
+      ]
     },
     {
       "id": "C009",
@@ -310,7 +342,7 @@
     "machine_validation": {
       "performed": true,
       "tool": "scripts/validate_evidence.py",
-      "tool_version": "0.1.0",
+      "tool_version": "0.1.1",
       "result": "passed"
     }
   }

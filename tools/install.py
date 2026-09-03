@@ -174,6 +174,15 @@ def install(platform: str, dest: Path | None, replace: bool) -> int:
         try:
             shutil.copytree(tmp_path, target)
         except Exception:
+            # copytree can fail partway through and leave `target` existing
+            # again as a partial directory. shutil.move() onto an existing
+            # directory nests the source *inside* it rather than replacing
+            # it, so the backup would end up buried at
+            # target/<backup_dir_name>/... instead of restored to `target`
+            # itself. Clear the partial directory first so the restore lands
+            # exactly where the original was.
+            if target.exists():
+                shutil.rmtree(target)
             shutil.move(str(backup_dir), str(target))
             raise
         print(f"Replaced existing installation at {target} (backup kept at {backup_dir})")

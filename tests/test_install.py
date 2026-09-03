@@ -123,5 +123,77 @@ class InstallTests(unittest.TestCase):
             self.assertTrue((dest / "SKILL.md").exists())
 
 
+class ReplaceFailureRecoveryTests(unittest.TestCase):
+    """Fault-injection test: if the copy-in step of --replace fails partway
+    through (disk full, permission error, etc.), the original installation
+    must be restored byte-for-byte, not nested inside a partial leftover
+    directory. Uses a direct import + monkeypatch (rather than the subprocess
+    CLI) so a mid-copy failure can be injected deterministically."""
+
+    def setUp(self):
+        import importlib.util
+        import shutil as _shutil
+
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.backup_root = self.tmp / "backups"
+
+        spec = importlib.util.spec_from_file_location("install_under_test", INSTALL_PY)
+        self.install_mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.install_mod)
+        self.install_mod.BACKUP_ROOT = self.backup_root
+        self._real_copytree = _shutil.copytree
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_partial_copytree_failure_restores_original_content_in_place(self):
+        dest = self.tmp / "flaky-target"
+        # Fresh install first.
+        rc = self.install_mod.install("codex", dest, replace=False)
+        self.assertEqual(rc, 0)
+        (dest / "SKILL.md").write_text("original content that must survive a failed replace", encoding="utf-8")
+        original_files = {p.relative_to(dest) for p in dest.rglob("*") if p.is_file()}
+
+        call_count = {"n": 0}
+
+        def flaky_copytree(src, dst, *args, **kwargs):
+            # Simulate a copy that fails after creating the target directory
+            # and writing a handful of files -- the realistic partial-failure
+            # shape, not a clean no-op failure.
+            call_count["n"] += 1
+            if call_count["n"] == 1:
+                # This is the fresh-install call inside setUp's install() --
+                # let it through untouched.
+                return self._real_copytree(src, dst, *args, **kwargs)
+            Path(dst).mkdir(parents=True, exist_ok=True)
+            (Path(dst) / "SKILL.md").write_text("PARTIALLY COPIED, SHOULD NOT SURVIVE", encoding="utf-8")
+            raise OSError("simulated disk-full mid-copy")
+
+        self.install_mod.shutil.copytree = flaky_copytree
+        try:
+            with self.assertRaises(OSError):
+                self.install_mod.install("codex", dest, replace=True)
+        finally:
+            self.install_mod.shutil.copytree = self._real_copytree
+
+        # The critical assertion: dest must be exactly the pre-replace
+        # original, not the partial copy, and not the original nested a
+        # level deeper inside a leftover partial directory.
+        self.assertTrue(dest.is_dir())
+        self.assertEqual(
+            (dest / "SKILL.md").read_text(encoding="utf-8"),
+            "original content that must survive a failed replace",
+        )
+        restored_files = {p.relative_to(dest) for p in dest.rglob("*") if p.is_file()}
+        self.assertEqual(restored_files, original_files)
+        # The buggy behavior was shutil.move() nesting the whole original
+        # tree one level deeper (dest/<backup-dir-name>/SKILL.md) instead of
+        # restoring it to dest/SKILL.md directly -- assert that didn't happen.
+        self.assertTrue((dest / "SKILL.md").is_file())
+        nested_skill_mds = list(dest.glob("*/SKILL.md"))
+        self.assertEqual(nested_skill_mds, [], f"original was nested a level deeper instead of restored in place: {nested_skill_mds}")
+
+
 if __name__ == "__main__":
     unittest.main()

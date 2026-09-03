@@ -59,26 +59,43 @@ class BuildReleaseTests(unittest.TestCase):
                     name.startswith(f"industry-research/{dev_dir}"), f"{name} should not be in the release zip"
                 )
 
-    def test_checksums_file_matches_actual_file_contents(self):
+    def test_sha256sums_contains_only_the_zip_and_verifies_before_extraction(self):
+        """SHA256SUMS.txt must be usable the moment it's downloaded, without
+        extracting anything first -- so it must list only the zip file
+        itself, not paths that only exist after extraction."""
         self._build()
         version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         zip_path = self.out_dir / f"industry-research-v{version}.zip"
         sums_path = self.out_dir / "SHA256SUMS.txt"
 
-        recorded = {}
-        for line in sums_path.read_text(encoding="utf-8").splitlines():
-            digest, name = line.split("  ", 1)
-            recorded[name] = digest
+        lines = sums_path.read_text(encoding="utf-8").strip().splitlines()
+        self.assertEqual(len(lines), 1, f"SHA256SUMS.txt should list exactly the zip, got: {lines}")
+        digest, name = lines[0].split("  ", 1)
+        self.assertEqual(name, zip_path.name)
+        self.assertEqual(digest, hashlib.sha256(zip_path.read_bytes()).hexdigest())
 
-        self.assertIn(zip_path.name, recorded)
-        self.assertEqual(hashlib.sha256(zip_path.read_bytes()).hexdigest(), recorded[zip_path.name])
+        result = subprocess.run(
+            ["shasum", "-a", "256", "-c", sums_path.name], cwd=self.out_dir, capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, f"shasum -c failed before extraction: {result.stdout}{result.stderr}")
 
+    def test_manifest_inside_zip_verifies_after_extraction(self):
+        """MANIFEST.sha256 ships inside the zip and must verify cleanly once
+        run from inside the extracted directory."""
+        self._build()
+        version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+        zip_path = self.out_dir / f"industry-research-v{version}.zip"
+        extract_dir = self.out_dir / "extracted"
         with zipfile.ZipFile(zip_path) as zf:
-            for arcname in zf.namelist():
-                if arcname not in recorded:
-                    continue
-                content = zf.read(arcname)
-                self.assertEqual(hashlib.sha256(content).hexdigest(), recorded[arcname])
+            zf.extractall(extract_dir)
+
+        payload_dir = extract_dir / "industry-research"
+        self.assertTrue((payload_dir / "MANIFEST.sha256").exists())
+
+        result = subprocess.run(
+            ["shasum", "-a", "256", "-c", "MANIFEST.sha256"], cwd=payload_dir, capture_output=True, text=True
+        )
+        self.assertEqual(result.returncode, 0, f"shasum -c failed after extraction: {result.stdout}{result.stderr}")
 
     def test_extracted_zip_relative_references_resolve(self):
         """SKILL.md's relative links (to references/, assets/) must still
