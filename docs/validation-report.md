@@ -1,6 +1,6 @@
 # 验证记录
 
-版本：0.1.10　记录日期：2026-09-04
+版本：0.1.11　记录日期：2026-09-04
 
 ## 0. 外部评审修复历史
 
@@ -38,7 +38,9 @@
 
 **v0.1.10（相对 v0.1.9，2026-09-04）**：第三轮验收复核指出四处语义问题：(1) "以规模换份额"缺少市场份额或定价策略证据；(2) `C013` 仅凭2025年单一年度销量增速就把行业定性为"处于扩张期"，直接违反 `industry-framework.md` 关于市场维度"不能仅凭单一年份增速给全行业定性"的方法要求；(3) `C012` 的"出海同步推进"只有2025年出口量单一绝对值，无历年趋势；(4) `C008` 的证据只能证明"资本化进程/上市结果"分化，不能证明"经营状况"分化，report.md 中进一步推测的"估值和盈利要求趋于分化"也没有独立证据支撑。逐条核实后：(1)(4) 收窄措辞修正；(2) 撤回生命周期定性判断（记录为"复核后主动收窄，不是补充新证据"，因为规则本身就是"单一数据点不能支撑该判断"，与数据是否完整无关）；(3) 通过真实检索修正——`WebFetch` 独立核实新增来源 `S010`，确认2023年国产份额89.04%（六轴及以上口径）较2022年（约84.52%，推算）上升4.52个百分点，新增 `claim C017`，使"国产份额持续扩大"有了2022→2023→2025三点跨年趋势证据；检索中出现的另一组数字（2024年市场规模及均价下降趋势）因两个候选来源互相矛盾、无法定位到唯一原文，**未采用**——这正是"冲突数字不取平均、无法核实不采用"这条证据规则的真实体现。出口趋势数据仍缺失，新增 `G006` 记录该缺口。详见 `CHANGELOG.md` 的 0.1.10 条目和 `examples/public-industry-case/`。
 
-以上十轮修复/变更均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.9` tag**，问题记录保留在 git 历史中。本文件下方"1—3 节"的自动化测试/校验器结果已按 v0.1.10 状态更新；"4—6 节"的行为评测记录保留 v0.1.0/v0.1.7/v0.1.8 期间的真实执行历史，未重新执行，按上一段如实标注。
+**v0.1.11（相对 v0.1.10，2026-09-04）**：第四轮验收复核发现 v0.1.10 的修复本身留了两处问题：(1) `C012` 把 `C006`（S004转引GGII）与 `C017`（S010转引GGII）称为"两个独立来源方向一致"，但两者最终都来自同一家研究机构GGII，不构成独立机构的交叉验证，只是同一数据源在不同年份的披露——这是上一轮修复自己引入的新过度措辞；(2) `C017` 的 statement 提到2022年约84.52%是"推算"值，但 `metrics` 数组只有2023年的 `reported` 指标，没有为2022年建立 `value_type: calculated` 的 metric 并写明 `method`/`inputs`/`assumptions`，不符合 `evidence-rules.md` 关于推算类数字的公开要求。逐条核实后：(1) 已将 `C012`、`coverage.market`、`coverage.competition` 及 `report.md` 中所有"独立来源"表述改为准确描述；(2) 已为 `C017` 补充2022年的 `calculated` metric，写明推算方法、输入数据和假设。详见 `CHANGELOG.md` 的 0.1.11 条目。
+
+以上十一轮修复/变更均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.10` tag**，问题记录保留在 git 历史中。本文件下方"1—3 节"的自动化测试/校验器结果已按 v0.1.11 状态更新；"4—6 节"的行为评测记录保留 v0.1.0/v0.1.7/v0.1.8 期间的真实执行历史，未重新执行，按上一段如实标注。
 
 ## 1. 自动化测试
 
@@ -53,7 +55,7 @@ python3 tools/build_release.py
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
 - `python3 -m unittest discover -s tests`：**97 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73 → v0.1.5: 80 → v0.1.8: 97），v0.1.6/v0.1.7 未改动 `scripts/validate_evidence.py`，测试数保持80不变；v0.1.8 新增 17 个测试（`CoverageValidationTests`、`ClaimDimensionsValidationTests`、`SchemaVersionUpgradePromptTests`），覆盖此前所有规则外加：顶层 `coverage` 的五键完整性/多余键检测、`status` 枚举校验、`claim_ids` 悬空引用检测、`status=covered` 必须有一条 `kind!=unknown` 且 `dimensions` 匹配的主张支撑、`claims[].dimensions` 取值合法性与去重、声明旧版本 `schema_version: "1.1"` 的文件按既有版本不匹配机制硬失败。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.9.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.11.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 

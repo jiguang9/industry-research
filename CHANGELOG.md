@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.11 - 2026-09-04
+
+A fourth acceptance-review pass, on `v0.1.10` itself (already tagged, pushed, and green on CI), found that the previous round's own fix had introduced a new overclaim, plus a schema-compliance gap it should have caught:
+
+- **`C012` called `C006` (S004, citing GGII) and `C017` (S010, citing GGII) "两个独立来源方向一致" (two independent sources agreeing)** -- but both ultimately trace to the same primary research house (GGII); they aren't independent cross-validation, just the same data source's disclosures at different points in time. If GGII's own methodology shifted, or either secondary outlet mis-transcribed a number (this exact dataset already has a precedent: S004's figure was previously caught having been mangled by a search-engine summary), both data points could carry the same error. Reworded `C012`, `coverage.market`, `coverage.competition`, and every place in `report.md` that used "独立来源" for this pair -- now states plainly that the two points are same-origin (GGII) disclosures, directionally consistent but not independently corroborating.
+- **`C017` stated a calculated 2022 figure (~84.52%) in its `statement` but never actually recorded it as a `metrics` entry** -- only the 2023 `reported` value existed, with no `value_type: calculated` metric carrying the required `method`/`inputs`/`assumptions` per `references/evidence-rules.md`'s rule for estimated/calculated numbers. Added the missing metric: method (89.04 - 4.52 = 84.52), inputs (the two numbers S010 actually reports), and the assumption that "percentage points" means an absolute difference rather than a relative change (S010's original text doesn't disambiguate this).
+- Re-validated: `structural_ok: true`, same 2 pre-existing warnings, no regressions. Ships as its own version, same reasoning as every prior round in this project.
+
 ## 0.1.10 - 2026-09-04
 
 A third acceptance-review pass (after `v0.1.9` was already tagged, pushed, and green on CI) found four more real semantic problems in `examples/public-industry-case/`, three of them direct violations of rules this project's own `references/industry-framework.md` states explicitly. Fixed all four; one required real research (not just rewording), which surfaced a good demonstration of this project's own evidence discipline in action.
