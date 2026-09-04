@@ -1,6 +1,6 @@
 # 平台验证矩阵
 
-**v0.1.8 说明**：本文件中标记为 `passed` 的"自然语言自动触发 + 实际研究行为"两条记录，是针对 v0.1.0/v0.1.7 期间的六模块工作流（行业地图/交易与交付/商业模式/用户与渠道/竞争结构/变化与问题）实际跑通的子 Agent 测试，测试时 `evidence.json` 还没有 `coverage`/`dimensions` 字段。v0.1.8 把研究主线改为"定义与边界 → 五维 → 关系解释 → 建议"（见 [../references/industry-framework.md](../references/industry-framework.md)），这是内容和 schema 层面的改动，机器校验（`scripts/validate_evidence.py`）和自动化测试已经针对新结构重新跑过并通过，但**尚未针对 v0.1.8 重新做一次真实的"新开一个子 Agent、调用 Skill、观察实际产出"行为测试**——下方记录的"行为验证 passed"状态是历史结果，反映的是"Skill 能被发现、被调用、能产出遵守证据规则的报告"这件事本身在 v0.1.0/v0.1.7 是成立的，不能读成"v0.1.8 的五维总览表/coverage 填写方式已经过真实 Agent 验证"。这是本次交付诚实标注的已知缺口，建议下一次有可用 Agent 运行环境时补测。
+**v0.1.8 说明**：本文件中标记为 `passed` 的"自然语言自动触发 + 实际研究行为"两条历史记录（用例1旧版、用例4），是针对 v0.1.0/v0.1.7 期间的六模块工作流（行业地图/交易与交付/商业模式/用户与渠道/竞争结构/变化与问题）实际跑通的子 Agent 测试，测试时 `evidence.json` 还没有 `coverage`/`dimensions` 字段。v0.1.8 把研究主线改为"定义与边界 → 五维 → 关系解释 → 建议"（见 [../references/industry-framework.md](../references/industry-framework.md)）。**2026-09-04 已补测一次**：先用 `tools/install.py --platform claude --replace` 把本机 Claude Code 的 Skill 安装从 v0.1.7 替换为 v0.1.8，再开一个全新无先前上下文的子 Agent，输入中性措辞"帮我快速了解中国预制菜行业。"，产出的 `evidence.json` 确认 `schema_version: "1.2"`、`coverage` 五键齐全、全部 claim 带 `dimensions`，本机独立复验 `structural_ok: true`；详细记录见 [validation-report.md 第4节"用例1执行记录（v0.1.8 五维框架复测）"](validation-report.md)。**这只证明了1个用例（用例1，中性措辞、overview 默认）在 v0.1.8 下真实可用**，不能代表 client-prep（用例4）、opportunity 用途，或新增用例14-21（多角色平台、组合收入、上游议价反例、无份额数据、成熟行业新细分、纯趋势观点、用户框架图等边界场景）也已验证——这些仍是明确的已知缺口，建议下一次有可用 Agent 运行环境时继续补测。
 
 记录格式：
 
@@ -76,4 +76,4 @@
 - 四平台中只有 Claude Code 在本次交付中完成了"宿主发现"和"行为验证"层的实测（且行为验证只有一次抽样，不代表所有措辞和场景下都稳定触发）；Codex、OpenClaw、Hermes 三个平台目前只做到了"静态结构合规"和"本项目安装脚本可用性"两层。
 - 后续如果能获得 Codex/OpenClaw/Hermes 的可用账号或本地运行时，应按本文件顶部的记录格式补齐对应条目，不应把"能被 `tools/install.py` 正确安装"误报为"该平台已实测可用"。
 - Windows 未在本次验证范围内；CI（`.github/workflows/ci.yml`）目前只跑 Linux 和 macOS。
-- v0.1.8 引入的五维框架（`coverage`/`dimensions`、report.md 前部总览表、"关键关系解释"一节）目前只有机器校验和单元测试覆盖，尚未有真实 Agent 会话按新结构完整跑过一次 evals/cases.md 中的用例（尤其是新增的用例 13—21）；建议下次有可用运行环境时优先补齐这部分行为验证，而不是仅依赖本文件中针对旧版工作流的历史记录。
+- v0.1.8 引入的五维框架（`coverage`/`dimensions`、report.md 前部总览表、"关键关系解释"一节）已有 1 次真实 Agent 会话行为验证（用例1，见上方说明和 [validation-report.md](validation-report.md)），但 evals/cases.md 中其余 20 个用例（尤其新增的 14—21）仍未在新框架下实际执行；建议下次有可用运行环境时优先补齐 client-prep（用例4）和新增的边界场景用例。

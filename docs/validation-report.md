@@ -28,7 +28,11 @@
 - `tests/fixtures/valid_evidence.json` 补充 `coverage`+`dimensions`；新增 4 个 invalid fixture（`invalid_coverage_missing_key.json`、`invalid_coverage_bad_status.json`、`invalid_coverage_dangling_claim.json`、`invalid_dimensions_bad_value.json`）和对应测试类（`CoverageValidationTests`、`ClaimDimensionsValidationTests`、`SchemaVersionUpgradePromptTests`），测试数量从 80 增至 97。
 - `evals/cases.md` 新增用例 13—21（完整 Quick 五维总览、只研究单一维度、多角色平台生态、订阅+项目组合收入、材料显示上游议价更强、只有品牌无份额数据、成熟行业新细分增长、只有趋势观点无变化事实、用户提供框架图案例）；`evals/rubric.md` 新增第 5 项"五维语义验收"评分维度。
 
-**诚实标注的缺口**：以上验证均为机器校验（`validate_evidence.py`、`check_skill.py`、`unittest`）和人工复核，**没有**重新开一个真实 Agent 会话、按新的五维结构完整跑一次 evals/cases.md 的用例（尤其是新增的 13—21）来验证实际研究行为——第 4 节记录的两次真实子 Agent 测试发生在六模块工作流版本，其"发现机制可用""证据纪律可用"等结论在架构层面仍然成立，但不能证明五维总览表、`coverage` 的填写方式在真实研究场景下同样可用。这是本次交付明确记录、留给下一次有可用 Agent 运行环境时补齐的工作项，详见 [`docs/platform-compatibility.md`](platform-compatibility.md) 顶部说明。
+**v0.1.8 首次提交时的缺口，及当天的补测**：v0.1.8 首次提交时，以上验证均为机器校验（`validate_evidence.py`、`check_skill.py`、`unittest`）和人工复核，没有重新开一个真实 Agent 会话按新的五维结构跑一次用例。收到这一具体缺口的验收意见后，当天在本机把 `~/.claude/skills/industry-research/` 从 v0.1.7 重新安装为 v0.1.8（用 `tools/install.py --platform claude --replace`，替换前是六模块版本），随后用 Agent 工具开了一个全新、无先前上下文的子 Agent，输入中性措辞"帮我快速了解中国预制菜行业。"（不含深度/用途信号词）。子 Agent 独立发现并调用了 `industry-research`，产出 `evidence.json`（`schema_version: "1.2"`，`coverage` 五个键齐全且状态合理——`market`/`value_chain`/`competition`/`trends_risks` 为 `covered`、`business_model` 为 `partial`，全部 15 条 claim 都带 `dimensions`）、`report.md`（含五维总览表和"四、关键关系解释"一节，用监管定义清晰度如何影响消费者信任解释了2025年9月罗永浩-西贝事件为何迅速升级）、`validation.json`。本机独立复验 `validate_evidence.py --report`：`structural_ok: true`，0 errors，1 warning，3 条 conflicted 主张被正确标记为需人工复核。完整记录见下方"用例1执行记录（v0.1.8 五维框架复测）"。
+
+这次复测证明了两件事：（1）五维框架、`coverage`/`dimensions` 字段在真实 Agent 会话中确实能被正确产出并通过机器校验，不只是本次开发会话里手工构造的 fixture 和示例；（2）复测过程中发现的另一个真实问题——行业定义卡和代表性交易在实际输出中也被压缩成了段落而非逐条问答/要素——反过来证实了验收意见里"公开案例定义卡和代表性交易展示不完整"这一发现具有代表性，不是示例案例的孤立问题，已同步强化 `assets/report-template.md`、`references/output-guidance.md` 的对应指引并修复了公开示例（见 `examples/public-industry-case/README.md` 中"同日验收复核"一节）。
+
+**仍然存在的缺口**：这次补测只覆盖了 21 个用例中的 1 个（用例1，同时满足新增用例13"完整 Quick 请求"的检查点），且是同一台机器、同一个会话内完成，不是独立第三方评审。用例2-12（除已在六模块版本下执行的用例1/4历史记录外）以及新增用例14-21仍未执行，见下方第4节表格。
 
 以上八轮修复/变更均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.7` tag**，问题记录保留在 git 历史中。本文件下方"1—3 节"的自动化测试/校验器结果已按 v0.1.8 状态更新；"4—6 节"的行为评测记录保留 v0.1.0/v0.1.7 期间的真实执行历史，未重新执行，按上一段如实标注。
 
@@ -71,9 +75,10 @@ python3 scripts/validate_evidence.py examples/public-industry-case/evidence.json
 
 | 用例编号 | 状态 | 说明 |
 |---|---|---|
-| 1（普通行业名，未指定深度） | **已执行** | 用中性措辞"帮我快速了解中国预制菜行业"（不含深度/用途信号词）单独测试，见下方"用例1执行记录（更正版）" |
-| 4（明确 client-prep） | **已执行**（原先被误标为用例1） | 见下方"用例4执行记录"。**更正说明**：本报告最初把这次执行记为"用例1"，但输入措辞"我需要在商务通话前快速了解……"本身会触发 client-prep 用途，实际验证的是用例4而非用例1；已重新执行一次真正中性措辞的用例1（见上一行），不依赖这次的结果冒充用例1通过 |
-| 2、3、5-12 | 设计完成，本次未执行 | 已在 `evals/cases.md` 中定义好用例和检查点，可供后续会话或协作者执行；不编造未执行用例的结果 |
+| 1（普通行业名，未指定深度） | **已执行两次**：v0.1.0（六模块）+ **v0.1.8（五维框架）** | 六模块版本记录见下方"用例1执行记录（更正版）"；v0.1.8 复测记录见下方"用例1执行记录（v0.1.8 五维框架复测）"，用同一条中性措辞独立重跑，两次都不含深度/用途信号词 |
+| 4（明确 client-prep） | **已执行**（六模块版本，原先被误标为用例1） | 见下方"用例4执行记录"。**更正说明**：本报告最初把这次执行记为"用例1"，但输入措辞"我需要在商务通话前快速了解……"本身会触发 client-prep 用途，实际验证的是用例4而非用例1；已重新执行一次真正中性措辞的用例1（见上一行），不依赖这次的结果冒充用例1通过；v0.1.8 五维框架下尚未重新执行用例4 |
+| 13（完整 Quick 请求，五维总览） | **已执行（附带验证）**，与用例1 v0.1.8 复测为同一次运行 | 用例1的输入本身就是"完整 Quick 请求"，v0.1.8 复测同时满足用例13的检查点（见下方记录）：五维总览表齐全、篇幅保持 Quick 量级、未强行为每维凑数字（`business_model` 如实标 `partial`） |
+| 2、3、5-12、14-21 | 设计完成，本次未执行 | 已在 `evals/cases.md` 中定义好用例和检查点，可供后续会话或协作者执行；不编造未执行用例的结果 |
 
 ### 用例1执行记录（更正版）
 
@@ -98,6 +103,42 @@ Skill版本：0.1.0（子 Agent 启动时读取到的是替换为 0.1.1 之前�
 - **机器校验**：实际运行 `validate_evidence.py`，`structural_ok: true`，0 errors，0 warnings，退出码 0。
 - **同样的环境限制再次出现**：又一次因为文件名含"report"被子 Agent 上下文的 Write 工具拒绝，与用例4的记录一致，进一步确认这是环境限制而非偶发。
 - **一个值得记录的边界案例**：本次 prompt 明确要求"不要主动寻找或提及任何 Skill"，与系统级"匹配到 Skill 时必须调用"的强制规则产生冲突；子 Agent 选择遵循系统级规则并在事后如实说明这一冲突，而不是隐瞒。这不是本 Skill 设计的一部分，记录在此供参考。
+
+### 用例1执行记录（v0.1.8 五维框架复测，同时验证用例13）
+
+```text
+用例编号：1（普通行业名，未指定深度）+ 13（完整 Quick 请求，五维总览）
+执行日期：2026-09-04
+Skill版本：0.1.8（先用 `python3 tools/install.py --platform claude --replace` 把本机
+  `~/.claude/skills/industry-research/` 从 v0.1.7（六模块）替换为 v0.1.8，旧版本备份到
+  `~/.industry-research-backups/claude-20260904T064140Z`，确认子 Agent 读到的是新版本后再测试）
+执行平台：Claude Code（子 Agent，通过 Agent 工具启动，独立无先前上下文，不知晓本次开发会话内容）
+输入摘要："帮我快速了解中国预制菜行业。"（不含深度/用途信号词，与更正版用例1使用同一个行业、同一条措辞，
+  便于对比六模块版本与五维版本在同一输入下的产出差异）
+实际输出位置：industry-research-output/yuzhicai-prepared-meals-20260904/（相对本仓库根目录，
+  未纳入版本控制，属于 .gitignore 中 industry-research-output/ 规则排除的运行产出）
+  （yuzhicai-industry-briefing.md、evidence.json、validation.json）
+```
+
+**结果：passed。** 本机独立复验（不依赖子 Agent 自报的结论）：
+
+```bash
+python3 -c "import json; d=json.load(open('industry-research-output/yuzhicai-prepared-meals-20260904/evidence.json')); print(d['schema_version'], list(d['coverage'].keys()))"
+# 1.2 ['market', 'value_chain', 'business_model', 'competition', 'trends_risks']
+python3 scripts/validate_evidence.py industry-research-output/yuzhicai-prepared-meals-20260904/evidence.json \
+  --report industry-research-output/yuzhicai-prepared-meals-20260904/yuzhicai-industry-briefing.md
+# structural_ok: true, 0 errors
+```
+
+关键发现：
+
+- **五维框架真实落地**：`evidence.json` 的 `schema_version` 为 `1.2`，顶层 `coverage` 五个键齐全（`market`/`value_chain`/`business_model`/`competition`/`trends_risks`），状态分别为 `covered`/`covered`/`partial`/`covered`/`covered`——`business_model` 被如实标为 `partial` 而不是为了表格好看硬凑成 `covered`，符合"不为填表编造"的设计意图。全部 15 条 claim 都带 `dimensions` 字段，无一遗漏。
+- **总览表与关系解释真实产出**：`report.md`（原文见下方摘录）在"最值得记住的认识"之后紧跟"二、行业定义与五维总览"，含完整的行业定义（预制菜的官方定义、2024年首次明确、2026年国标征求意见稿的排除范围）和五维总览表；"四、关键关系解释"一节用"监管定义清晰度→消费者信任→2025年9月罗永浩-西贝事件为何迅速升级为全国讨论"这条真实的因果路径，而不是泛泛而谈。
+- **口径纪律延续**：市场规模数字存在机构间冲突（艾媒咨询4850亿元 vs 库润数据5466亿元，相差616亿元、增速判断几乎相反），报告如实并列展示、注明"目前没有'官方口径'的市场规模数字"，对应 3 条 `conflicted` 主张，与六模块版本时期的证据纪律水平一致，没有因为改了框架而退步。
+- **证据规模**：10 个来源、15 条主张（14 fact / 1 inference）；evidence_status 分布 8 supported / 3 partial / 3 conflicted / 1 unverified；2 组 comparisons（市场规模口径冲突相关）、5 条 gaps。
+- **机器校验**：本机独立运行 `validate_evidence.py --report`（不是只信子 Agent 自报），`structural_ok: true`，0 errors，1 warning（`C015` 一条 partial 推断缺 source_ids 的软提醒），3 条 conflicted 主张被正确标记为 `manual_review_required`——校验器行为符合设计预期。
+- **暴露的真实问题（已修复）**：报告的"行业定义"部分写成了一段说明性文字，没有逐条回答定义卡的五个问题；"商业模式"部分也没有走完"收费单位/交付内容/履约成本/盈利条件"这套代表性交易结构，而是停留在"规模化生产摊薄成本、毛利率走低"这类概括性描述。这与验收意见中对 `examples/public-industry-case/` 的发现完全一致，证明不是示例案例的孤立问题，而是模板指引不够明确导致的系统性压缩。已强化 `assets/report-template.md`（明确要求逐条列出定义卡五问和代表性交易五要素）和 `references/output-guidance.md`，并同步修复了公开示例（见 `examples/public-industry-case/README.md`"同日验收复核"一节）；本次复测的输出文件本身未回滚重跑，如实保留其"框架已落地、但当时的模板指引还不够严格"这一状态。
+- **环境限制再次出现**：子 Agent 把主报告命名为 `yuzhicai-industry-briefing.md` 而非 `report.md`，与用例4、六模块版本用例1的记录一致——继续确认这是 Claude Code 对子 Agent 写入 `report` 开头文件名的防护限制，与本 Skill 设计无关。
 
 ### 用例4执行记录（原误标为用例1）
 
@@ -132,5 +173,5 @@ Skill版本：0.1.0
 
 - Codex / OpenClaw / Hermes 的宿主发现与行为验证：需要对应平台的本地运行时或账号。
 - 对比评测的实际执行：需要额外预算，方法已就绪。
-- 用例2、3、5-21（共19个，含 v0.1.8 新增的13-21）的实际执行：方法已就绪，欢迎后续会话或协作者执行并补充记录（用例1、4已完成，见第4节，但均发生在六模块工作流版本，见上方"0. 外部评审修复历史"末尾的诚实标注）。
-- **v0.1.8 五维框架的真实行为验证**：需要重新开一个真实 Agent 会话，按新的"定义与边界→五维→关系解释→建议"流程完整跑一次用例1/4（复验旧结论在新结构下仍成立）和新增用例13-21，确认 `report.md` 五维总览表、`evidence.json` 的 `coverage`/`dimensions` 在真实研究场景下的实际填写质量，而不只是本次这样的机器校验+人工复核。
+- 用例2、3、5-12、14-21（共18个）的实际执行：方法已就绪，欢迎后续会话或协作者执行并补充记录（用例1已在六模块和五维两个版本下各执行一次，用例4/13见第4节；13是v0.1.8复测顺带满足的，不是单独执行的）。
+- **v0.1.8 五维框架的真实行为验证**：2026-09-04 已用一次独立子 Agent 运行（中性措辞、无先前上下文）完成了用例1在 v0.1.8 下的复测，本机独立复验 `structural_ok: true`，证明五维框架、`coverage`/`dimensions` 在真实研究场景下可用，并因此发现并修复了"定义卡/代表性交易被压缩成段落"这一真实问题（见上方"0."节）。**这只是1个用例、1次运行、同一台机器同一会话内完成**，不能替代对用例4（client-prep）在新框架下的复测，也不能替代新增用例14-21（多角色平台、组合收入、上游议价、无份额数据、成熟行业新细分、纯趋势观点、用户框架图等边界场景）的实际执行——这些仍是需要独立会话补齐的工作项。
