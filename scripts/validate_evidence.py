@@ -34,10 +34,15 @@ from typing import Any
 
 # 1.1: comparisons[].comparison_type became required (v0.1.2) -- a
 # backward-incompatible addition, hence the version bump rather than keeping
-# this at 1.0. Any file whose declared schema_version doesn't match this
-# constant fails validation (see validate()) instead of silently passing
-# under rules it was never written against.
-SCHEMA_VERSION = "1.1"
+# this at 1.0. 1.2 adds top-level `coverage` (five-dimension coverage record)
+# and `claims[].dimensions` (per-claim dimension tags), supporting the
+# "boundary -> five dimensions -> relationships -> recommendations" research
+# line -- also backward-incompatible, hence 1.1 -> 1.2 rather than reusing
+# 1.1 (already spent on comparison_type). Any file whose declared
+# schema_version doesn't match this constant fails validation (see
+# validate()) instead of silently passing under rules it was never written
+# against.
+SCHEMA_VERSION = "1.2"
 
 SOURCE_TYPES = {
     "official", "company", "association", "research",
@@ -53,6 +58,12 @@ PURPOSES = {"overview", "client-prep", "opportunity"}
 DEPTHS = {"quick", "deep"}
 RESEARCH_STATUSES = {"complete", "partial", "insufficient_evidence"}
 DIMENSION_FIELDS = ("period", "region", "scope")
+
+# The five research dimensions from references/industry-framework.md. Used
+# both as the fixed key set for top-level `coverage` and as the allowed
+# values for claims[].dimensions.
+FRAMEWORK_DIMENSIONS = ("market", "value_chain", "business_model", "competition", "trends_risks")
+COVERAGE_STATUSES = {"covered", "partial", "missing", "out_of_scope"}
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 CLAIM_ID_IN_TEXT_RE = re.compile(r"\[([A-Za-z]+\d+)\]")
@@ -301,6 +312,14 @@ def validate_claims(claims: Any, result: Result, source_ids: set[str]) -> dict[s
 
         _require(claim, "statement", path, result, _is_str)
 
+        dimensions = _require(claim, "dimensions", path, result, lambda v: isinstance(v, list) and all(_is_str(d) for d in v))
+        if isinstance(dimensions, list):
+            for d in dimensions:
+                if d not in FRAMEWORK_DIMENSIONS:
+                    result.error(f"{path}.dimensions", f"claim '{cid}': '{d}' is not one of {sorted(FRAMEWORK_DIMENSIONS)}")
+            if len(set(dimensions)) != len(dimensions):
+                result.error(f"{path}.dimensions", f"claim '{cid}': dimensions must not contain duplicates")
+
         kind = _require(claim, "kind", path, result, _is_str)
         if kind is not None and kind not in CLAIM_KINDS:
             result.error(f"{path}.kind", f"must be one of {sorted(CLAIM_KINDS)}, got {kind!r}")
@@ -526,6 +545,65 @@ def validate_gaps(gaps: Any, result: Result, claims_by_id: dict[str, dict]) -> s
     return gap_ids
 
 
+def validate_coverage(coverage: Any, result: Result, claims_by_id: dict[str, dict]) -> None:
+    path = "coverage"
+    if coverage is None:
+        result.error(path, "missing required top-level field 'coverage'")
+        return
+    if not isinstance(coverage, dict):
+        result.error(path, "'coverage' must be an object")
+        return
+
+    keys = set(coverage.keys())
+    missing_keys = set(FRAMEWORK_DIMENSIONS) - keys
+    extra_keys = keys - set(FRAMEWORK_DIMENSIONS)
+    if missing_keys:
+        result.error(path, f"missing required dimension key(s): {sorted(missing_keys)}")
+    if extra_keys:
+        result.error(path, f"unexpected key(s) not in the fixed five-dimension set: {sorted(extra_keys)}")
+
+    for dim in FRAMEWORK_DIMENSIONS:
+        if dim not in coverage:
+            continue
+        entry = coverage[dim]
+        entry_path = f"{path}.{dim}"
+        if not isinstance(entry, dict):
+            result.error(entry_path, f"coverage.{dim} must be an object")
+            continue
+
+        status = _require(entry, "status", entry_path, result, _is_str)
+        if status is not None and status not in COVERAGE_STATUSES:
+            result.error(f"{entry_path}.status", f"must be one of {sorted(COVERAGE_STATUSES)}, got {status!r}")
+
+        claim_ids = _require(entry, "claim_ids", entry_path, result, lambda v: isinstance(v, list) and all(_is_str(x) for x in v))
+        resolved_claims: list[dict] = []
+        if isinstance(claim_ids, list):
+            for cid in claim_ids:
+                claim = claims_by_id.get(cid)
+                if claim is None:
+                    result.error(f"{entry_path}.claim_ids", f"references unknown claim id '{cid}'")
+                else:
+                    resolved_claims.append(claim)
+
+        note = _require(entry, "note", entry_path, result, _is_str)
+        if isinstance(note, str) and note.strip() == "":
+            result.error(f"{entry_path}.note", "note must not be empty")
+
+        _require(entry, "next_question", entry_path, result, _is_nullable_str)
+
+        if status == "covered":
+            qualifies = any(
+                c.get("kind") != "unknown" and dim in (c.get("dimensions") or [])
+                for c in resolved_claims
+            )
+            if not qualifies:
+                result.error(
+                    entry_path,
+                    f"coverage.{dim}: status='covered' requires at least one referenced claim_id "
+                    f"with kind != 'unknown' whose dimensions include '{dim}'",
+                )
+
+
 def validate_checks(checks: Any, result: Result) -> None:
     if checks is None:
         result.error("checks", "missing required top-level field 'checks'")
@@ -603,6 +681,7 @@ def validate(evidence: Any, report_path: Path | None) -> Result:
     claims_by_id = validate_claims(evidence.get("claims"), result, source_ids)
     detect_cycles(claims_by_id, result)
 
+    validate_coverage(evidence.get("coverage"), result, claims_by_id)
     validate_comparisons(evidence.get("comparisons"), result, claims_by_id)
     gap_ids = validate_gaps(evidence.get("gaps"), result, claims_by_id)
     validate_checks(evidence.get("checks"), result)

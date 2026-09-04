@@ -1,15 +1,16 @@
-# evidence.json 字段定义（schema_version 1.1）
+# evidence.json 字段定义（schema_version 1.2）
 
 本文件是 `evidence.json` 的完整字段参考，供撰写报告和运行 [scripts/validate_evidence.py](../scripts/validate_evidence.py) 时对照。完整可运行的示例见 `tests/fixtures/valid_evidence.json`；结构错误示例见 `tests/fixtures/invalid_*.json`。校验器实现以本文件为准，两者不一致时以校验器代码的实际行为为准并应修订本文件。
 
-**版本历史**：`comparisons[]` 的必填字段 `comparison_type` 在 v0.1.2 引入，schema_version 的提升（1.0 → 1.1）随后在 v0.1.3 补做，两者不属于同一次提交。1.1 属于不兼容旧数据的变更。任何 `schema_version` 不等于当前校验器 `SCHEMA_VERSION` 常量的文件（包括仍声明 `"1.0"` 的旧文件，以及任何未知/伪造版本号）都会被判为结构错误，不会被静默当作合规文件通过。
+**版本历史**：`comparisons[]` 的必填字段 `comparison_type` 在 v0.1.2 引入，schema_version 的提升（1.0 → 1.1）随后在 v0.1.3 补做。1.2（本版本）在 1.1 的基础上新增顶层 `coverage`（五维覆盖记录：`market`/`value_chain`/`business_model`/`competition`/`trends_risks`）与 `claims[].dimensions`（主张关联的维度标签），用于支撑"定义与边界 → 五维研究 → 关系解释 → 任务建议"这条研究主线；这是不兼容旧数据的变更，因此版本号从 1.1 提升到 1.2，而不是复用已经用于 `comparison_type` 的 1.1。任何 `schema_version` 不等于当前校验器 `SCHEMA_VERSION` 常量的文件（包括仍声明 `"1.0"`/`"1.1"` 的旧文件，以及任何未知/伪造版本号）都会被判为结构错误，不会被静默当作合规文件通过；声明 1.1 的旧文件需要补充 `coverage` 和各 `claims[].dimensions` 后按本文件重新整理，而不是被当作已经符合 1.2 规则。
 
 ## 顶层结构
 
 ```text
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "research": { ... },
+  "coverage": { ... },
   "sources": [ ... ],
   "claims": [ ... ],
   "comparisons": [ ... ],
@@ -35,6 +36,23 @@
 | assumptions | array of string | 本次做出的默认假设，允许为空数组 |
 | status | enum | `complete` / `partial` / `insufficient_evidence` |
 | capabilities | object | `{ "web_search": bool, "file_read": bool, "file_write": bool, "code_execution": bool }`，如实记录本次运行实际具备的能力 |
+
+## coverage（对象，必需）
+
+五维覆盖记录，键固定为 `market`（市场）、`value_chain`（产业链）、`business_model`（商业模式）、`competition`（竞争格局）、`trends_risks`（趋势与风险），不多不少、不可增删或改名。每个键的值是一个对象：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| status | enum | `covered`（本次问题已有可用回答）/ `partial`（有部分认识但关键问题或证据不足）/ `missing`（尚无可用认识）/ `out_of_scope`（用户本次未要求该维度） |
+| claim_ids | array of string | 支撑该维度认识的 `claims[].id`；`missing`/`out_of_scope` 时通常为空数组 |
+| note | string | 该维度目前的认识程度、边界或缺口的简短说明，不能为空字符串 |
+| next_question | string \| null | 若该维度还需要下一步验证，写出具体问题；无则为 `null` |
+
+约束（校验器会检查）：
+
+- `claim_ids` 引用的 ID 必须存在于 `claims` 中。
+- `status=covered` 时，`claim_ids` 至少包含一个 ID，且其中至少一条被引用的 claim 满足 `kind != "unknown"` 且其 `dimensions` 数组包含该维度的键——不能仅凭"来源数量多"或"字段填了"就标记为 `covered`，必须有一条非 unknown 的主张确实关联到这个维度。
+- 覆盖状态由研究者判断，机器只检查字段、引用关系与上述"covered 需要一条合格主张"的最低要求；不据此计算"行业掌握程度"百分比。
 
 ## sources（数组，元素必需字段见下）
 
@@ -63,6 +81,7 @@
 |---|---|---|
 | id | string | 唯一 ID，如 `C001` |
 | statement | string | 主张正文 |
+| dimensions | array of string | 该主张关联的五维代码，取值只能来自 `market`/`value_chain`/`business_model`/`competition`/`trends_risks`，不允许重复；纯粹的范围/边界背景可以为空数组 `[]`；一条主张可以同时关联多个维度（例如一条解释"成本变化如何影响下游定价"的推断可以同时打 `value_chain` 和 `trends_risks`） |
 | kind | enum | `fact` / `inference` / `unknown` |
 | evidence_status | enum | `supported` / `partial` / `conflicted` / `unverified` |
 | source_ids | array of string | 引用的 `sources[].id`；`kind=unknown` 时允许为空数组 |

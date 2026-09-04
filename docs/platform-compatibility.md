@@ -1,5 +1,7 @@
 # 平台验证矩阵
 
+**v0.1.8 说明**：本文件中标记为 `passed` 的"自然语言自动触发 + 实际研究行为"两条记录，是针对 v0.1.0/v0.1.7 期间的六模块工作流（行业地图/交易与交付/商业模式/用户与渠道/竞争结构/变化与问题）实际跑通的子 Agent 测试，测试时 `evidence.json` 还没有 `coverage`/`dimensions` 字段。v0.1.8 把研究主线改为"定义与边界 → 五维 → 关系解释 → 建议"（见 [../references/industry-framework.md](../references/industry-framework.md)），这是内容和 schema 层面的改动，机器校验（`scripts/validate_evidence.py`）和自动化测试已经针对新结构重新跑过并通过，但**尚未针对 v0.1.8 重新做一次真实的"新开一个子 Agent、调用 Skill、观察实际产出"行为测试**——下方记录的"行为验证 passed"状态是历史结果，反映的是"Skill 能被发现、被调用、能产出遵守证据规则的报告"这件事本身在 v0.1.0/v0.1.7 是成立的，不能读成"v0.1.8 的五维总览表/coverage 填写方式已经过真实 Agent 验证"。这是本次交付诚实标注的已知缺口，建议下一次有可用 Agent 运行环境时补测。
+
 记录格式：
 
 ```text
@@ -48,7 +50,7 @@
 
 - 安装位置（默认，管理型目录）：`~/.openclaw/skills/industry-research/`
 - 调用：`openclaw skills list` / `openclaw skills info industry-research` 确认发现；`/skill industry-research <任务>` 调用
-- Git 直接安装：`openclaw skills install git:jiguang9/industry-research@v0.1.7`——该命令要求"`SKILL.md` 位于源仓库根目录"，本仓库正好符合这一结构（单 Skill、仓库根目录即 Skill 根目录），因此理论上应可用；但由于本机没有 OpenClaw 运行时，**该命令本身未实际执行验证**
+- Git 直接安装：`openclaw skills install git:jiguang9/industry-research@v0.1.8`——该命令要求"`SKILL.md` 位于源仓库根目录"，本仓库正好符合这一结构（单 Skill、仓库根目录即 Skill 根目录），因此理论上应可用；但由于本机没有 OpenClaw 运行时，**该命令本身未实际执行验证**
 
 | 层次 | 状态 | 说明 |
 |---|---|---|
@@ -74,3 +76,4 @@
 - 四平台中只有 Claude Code 在本次交付中完成了"宿主发现"和"行为验证"层的实测（且行为验证只有一次抽样，不代表所有措辞和场景下都稳定触发）；Codex、OpenClaw、Hermes 三个平台目前只做到了"静态结构合规"和"本项目安装脚本可用性"两层。
 - 后续如果能获得 Codex/OpenClaw/Hermes 的可用账号或本地运行时，应按本文件顶部的记录格式补齐对应条目，不应把"能被 `tools/install.py` 正确安装"误报为"该平台已实测可用"。
 - Windows 未在本次验证范围内；CI（`.github/workflows/ci.yml`）目前只跑 Linux 和 macOS。
+- v0.1.8 引入的五维框架（`coverage`/`dimensions`、report.md 前部总览表、"关键关系解释"一节）目前只有机器校验和单元测试覆盖，尚未有真实 Agent 会话按新结构完整跑过一次 evals/cases.md 中的用例（尤其是新增的用例 13—21）；建议下次有可用运行环境时优先补齐这部分行为验证，而不是仅依赖本文件中针对旧版工作流的历史记录。

@@ -12,7 +12,7 @@
 
 ## 一个真实案例
 
-[examples/public-industry-case/](examples/public-industry-case/) 是一份用本 Skill 实际完成的公开研究（中国协作机器人行业，Quick 深度，2026-09-03），包含 `report.md`、`evidence.json`、`validation.json`（真实运行校验器的输出）和一次真实发生的纠错过程（把搜索引擎摘要中被错误转述的数字，通过读取原文更正）。
+[examples/public-industry-case/](examples/public-industry-case/) 是一份用本 Skill 实际完成的公开研究（中国协作机器人行业，Quick 深度，2026-09-03），包含 `report.md`（前部含市场/产业链/商业模式/竞争格局/趋势与风险五维总览表）、`evidence.json`、`validation.json`（真实运行校验器的输出）和一次真实发生的纠错过程（把搜索引擎摘要中被错误转述的数字，通过读取原文更正）。
 
 ## 安装与调用
 
@@ -28,7 +28,7 @@ python3 tools/install.py --platform claude    # 或 codex / openclaw / hermes
 |---|---|---|---|
 | Claude Code | `~/.claude/skills/industry-research/` | 输入 `/industry-research`，或直接描述任务让 Claude 自动触发 | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
 | Codex | `~/.agents/skills/industry-research/` | CLI/IDE 中输入 `$industry-research`；ChatGPT Work 中 `@industry-research` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
-| OpenClaw | `~/.openclaw/skills/industry-research/` | `openclaw skills list` 确认发现后，`/skill industry-research <任务>`；也可 `openclaw skills install git:jiguang9/industry-research@v0.1.7` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
+| OpenClaw | `~/.openclaw/skills/industry-research/` | `openclaw skills list` 确认发现后，`/skill industry-research <任务>`；也可 `openclaw skills install git:jiguang9/industry-research@v0.1.8` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
 | Hermes Agent | `~/.hermes/skills/industry-research/` | 让当前 Agent 列出/描述其技能确认发现后，`/industry-research <任务>` | 见 [docs/platform-compatibility.md](docs/platform-compatibility.md) |
 
 自定义 profile、远程环境或项目级安装，用 `--dest` 指定确切目标目录：
@@ -57,7 +57,7 @@ python3 tools/install.py --platform codex --dest /absolute/path/to/industry-rese
 
 ## 输出与校验器的实际边界
 
-每次研究默认产出 `report.md` + `evidence.json`（结构定义见 [references/evidence-schema.md](references/evidence-schema.md)），按需产出 `client-brief.md` / `competitor-brief.md`。有 Python 时可运行：
+研究主线是"定义与边界 → 五维研究（市场、产业链、商业模式、竞争格局、趋势与风险）→ 关键关系解释 → 任务建议"，方法见 [references/industry-framework.md](references/industry-framework.md)。每次研究默认产出 `report.md`（前部含五维总览表）+ `evidence.json`（每条主张打 `dimensions` 标签，顶层 `coverage` 记录五维覆盖状态；结构定义见 [references/evidence-schema.md](references/evidence-schema.md)），按需产出 `client-brief.md` / `competitor-brief.md`。有 Python 时可运行：
 
 ```bash
 python3 scripts/validate_evidence.py path/to/evidence.json --report path/to/report.md --output validation.json

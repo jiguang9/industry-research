@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "research": {
     "industry": "测试：比较自相矛盾", "region": "测试", "scope": "测试", "exclusions": "",
     "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",
@@ -11,15 +11,22 @@
      "source_type": "media", "access_status": "fetched", "published_at": null, "accessed_at": "2026-09-03",
      "data_period": null, "origin_id": null, "location": null, "excerpt": null, "access_note": null}
   ],
+  "coverage": {
+    "market": {"status": "partial", "claim_ids": ["C001", "C002"], "note": "测试用两个未口径对齐的数字", "next_question": null},
+    "value_chain": {"status": "out_of_scope", "claim_ids": [], "note": "测试数据不涉及", "next_question": null},
+    "business_model": {"status": "out_of_scope", "claim_ids": [], "note": "测试数据不涉及", "next_question": null},
+    "competition": {"status": "out_of_scope", "claim_ids": [], "note": "测试数据不涉及", "next_question": null},
+    "trends_risks": {"status": "out_of_scope", "claim_ids": [], "note": "测试数据不涉及", "next_question": null}
+  },
   "claims": [
-    {"id": "C001", "statement": "指标A", "kind": "fact", "evidence_status": "supported",
+    {"id": "C001", "statement": "指标A", "dimensions": ["market"], "kind": "fact", "evidence_status": "supported",
      "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
      "confidence": "high", "limitations": [],
      "metrics": [
        {"name": "指标A", "value": 100, "unit": "万元", "period": "2025", "region": "测试市", "scope": "测试范围",
         "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": []}
      ]},
-    {"id": "C002", "statement": "指标B", "kind": "fact", "evidence_status": "supported",
+    {"id": "C002", "statement": "指标B", "dimensions": ["market"], "kind": "fact", "evidence_status": "supported",
      "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
      "confidence": "high", "limitations": [],
      "metrics": [

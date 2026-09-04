@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "research": {
     "industry": "测试：重复ID", "region": "测试", "scope": "测试", "exclusions": "",
     "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",

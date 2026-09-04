@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "research": {
     "industry": "示例：连锁咖啡馆（测试用虚构数据，非真实研究）",
     "region": "示例市",
@@ -16,6 +16,38 @@
       "file_read": true,
       "file_write": true,
       "code_execution": true
+    }
+  },
+  "coverage": {
+    "market": {
+      "status": "covered",
+      "claim_ids": ["C001", "C002"],
+      "note": "新增门店数与同店销售同比增长的规模信号，仅覆盖单一年度",
+      "next_question": null
+    },
+    "value_chain": {
+      "status": "out_of_scope",
+      "claim_ids": [],
+      "note": "本次为最小示例数据，未涉及产业链结构",
+      "next_question": null
+    },
+    "business_model": {
+      "status": "out_of_scope",
+      "claim_ids": [],
+      "note": "本次为最小示例数据，未涉及收费与成本结构",
+      "next_question": null
+    },
+    "competition": {
+      "status": "out_of_scope",
+      "claim_ids": [],
+      "note": "本次为最小示例数据，未涉及竞争格局",
+      "next_question": null
+    },
+    "trends_risks": {
+      "status": "partial",
+      "claim_ids": ["C002", "C003"],
+      "note": "仅有基于两个信号的扩张阶段推断，下一年度计划未知",
+      "next_question": "该企业下一年度门店扩张计划何时会公开披露？"
     }
   },
   "sources": [
@@ -56,6 +88,7 @@
     {
       "id": "C001",
       "statement": "该企业 2025 年新增直营门店 40 家。",
+      "dimensions": ["market"],
       "kind": "fact",
       "evidence_status": "supported",
       "source_ids": ["S001"],
@@ -92,6 +125,7 @@
     {
       "id": "C002",
       "statement": "考虑到新增门店数量和同店销售额均为正增长，推断该企业 2025 年处于扩张期。",
+      "dimensions": ["market", "trends_risks"],
       "kind": "inference",
       "evidence_status": "partial",
       "source_ids": ["S001"],
@@ -105,6 +139,7 @@
     {
       "id": "C003",
       "statement": "该企业下一年度的门店扩张计划规模尚不明确。",
+      "dimensions": ["trends_risks"],
       "kind": "unknown",
       "evidence_status": "unverified",
       "source_ids": [],

@@ -37,18 +37,20 @@ Quick 建立正确的基础理解：行业边界、产业链、商业模式、�
 
 ## 核心研究流程
 
-详细方法见 [references/research-workflow.md](references/research-workflow.md)，来源选择见 [references/source-strategy.md](references/source-strategy.md)，按行业类别的检索线索见 references/industry-guides/。
+研究主线是：**定义与边界 → 五维研究（市场、产业链、商业模式、竞争格局、趋势与风险）→ 关键关系解释 → 任务建议**。详细方法见 [references/research-workflow.md](references/research-workflow.md)，五维框架的完整问题清单和写法见 [references/industry-framework.md](references/industry-framework.md)，来源选择见 [references/source-strategy.md](references/source-strategy.md)，按行业类别的检索线索见 references/industry-guides/。
 
-1. **确定边界**：行业、别名、地区、细分范围、排除项、用途、深度、时间基准、待回答问题、默认假设，写成最小 research brief。区分容易混淆的口径（许可收入 vs 软硬件总收入 vs 实施服务；行业规模 vs 交易总额 vs 企业营收 vs 融资额）。
+1. **确定边界**：先建一张行业定义卡（服务谁、提供什么、解决什么问题、市场大致多大、边界在哪里），再写成最小 research brief：行业、别名、地区、细分范围、排除项、用途、深度、时间基准、待回答问题、默认假设。区分容易混淆的口径（许可收入 vs 软硬件总收入 vs 实施服务；行业规模 vs 交易总额 vs 企业营收 vs 融资额）。
 2. **选择来源**：官方统计/政策查定义和规模；企业年报/招股书/披露查经营结构；产品文档/招投标查定价和交付；协会资料/研究机构公开方法查分类;公开评价/用户材料查渠道信号；新闻只作线索，尽量追到原始发布者。来源质量由具体主张决定，不由来源类型单独决定。
-3. **解释行业如何运转**（按任务覆盖，不机械套满）：行业地图（细分环节、上下游）→ 交易与交付（谁向谁买、谁用、如何交付）→ 商业模式（怎么收费、成本与资源约束）→ 用户与渠道（如何选供应商、销售周期）→ 竞争结构（代表性企业类型、竞争发生在哪个环节）→ 变化与问题（发生了什么、影响谁、什么仍需验证）。
-4. **研究机会与影响**（opportunity 用途时展开）：每条建议说明适合谁、依据什么、需要什么条件、主要反证或不确定性、最小验证动作；区分"市场存在需求"“需求可被付费满足”“用户本人有能力进入”三个层次，不能只证明第一层就下结论。
-5. **校验并交付**：先核实关键主张与数字口径，再整理报告；有 Python 时运行 [scripts/validate_evidence.py](scripts/validate_evidence.py) 做结构校验；输出状态区分 `complete`（本次声明范围已完成）/ `partial` / `insufficient_evidence`，不等同于行业事实被全面证实。
+3. **五维研究**（按任务覆盖，不机械套满）：`market`（规模、需求、发展阶段）→ `value_chain`（产业链角色、资金/产品流向、议价关系）→ `business_model`（客户、收入机制、成本结构、盈利条件）→ `competition`（代表性企业、集中度、壁垒、替代关系）→ `trends_risks`（重要变化、影响路径、反证与验证条件）。用户只要求某个维度时按其范围完成，其余维度明确标为不在本次范围。
+4. **关系解释**：至少用一条有依据的关系说明环节之间如何相互影响（例如成本变化如何传导到定价），证据不足时给待验证路径而非强行给出因果结论。
+5. **研究机会与影响**（opportunity 用途时展开）：每条建议说明适合谁、依据什么、需要什么条件、主要反证或不确定性、最小验证动作；区分"市场存在需求"“需求可被付费满足”“用户本人有能力进入”三个层次，不能只证明第一层就下结论。
+6. **校验并交付**：先核实关键主张与数字口径，再整理报告；有 Python 时运行 [scripts/validate_evidence.py](scripts/validate_evidence.py) 做结构校验；输出状态区分 `complete`（本次声明范围已完成）/ `partial` / `insufficient_evidence`，不等同于行业事实被全面证实。
 
 ## 证据规则（必须遵守）
 
 完整规则见 [references/evidence-rules.md](references/evidence-rules.md)，数据结构见 [references/evidence-schema.md](references/evidence-schema.md)。核心行为：
 
+- 每条主张打上关联的五维标签（`dimensions`，可多选、可为空），研究收尾时把每个维度的认识状态压缩进 `evidence.json` 的 `coverage`（`covered`/`partial`/`missing`/`out_of_scope`）；缺口维度如实标 `missing`/`out_of_scope`，不能为了表格好看而虚报 `covered`。
 - 每个重要主张都有证据编号（如 `[C001]`）和可回溯来源；推断标 inference 并给依据，未知标 unknown，不补写成事实。
 - 数字必须带时期、地区、单位、统计范围；口径不明时明确"不可直接比较"，不能默认换算或直接横向对比。
 - 转述、原文摘录、模型推断分开记录；不给转述加引号冒充直接引用。
@@ -73,8 +75,8 @@ Quick 建立正确的基础理解：行业边界、产业链、商业模式、�
 
 有文件能力时，默认写入用户指定位置，未指定则用 `industry-research-output/<行业slug>-<日期时间>/`；不写入 Skill 安装目录，不覆盖此前运行。**写了文件不代表交付完成**：对话回复中必须直接给出 `report.md` 的正文内容（Quick 深度通常可以是全文；Deep 深度篇幅较长时至少给出结构完整的正文，如"最值得记住的认识"和各主要小节），不能只回复"报告已生成：report.md、evidence.json"这类文件名列表——很多环境下用户需要额外点击附件才能看到文件内容，只写文件不等于用户已经看到了研究结果。
 
-- `report.md`：本次研究报告，结构见 [assets/report-template.md](assets/report-template.md)。
-- `evidence.json`：范围、来源、主张、缺口与校验状态，字段定义见 [references/evidence-schema.md](references/evidence-schema.md)。
+- `report.md`：本次研究报告，结构见 [assets/report-template.md](assets/report-template.md)，正文前部需有五维总览表（一眼看到全貌和证据缺口，而不是先写结论再补证据）。
+- `evidence.json`：范围、五维覆盖记录（`coverage`）、来源、主张（含 `dimensions` 标签）、缺口与校验状态，字段定义见 [references/evidence-schema.md](references/evidence-schema.md)。
 - `client-brief.md`（client-prep 用途）：模板见 [assets/client-brief-template.md](assets/client-brief-template.md)。
 - `competitor-brief.md`（用户要求继续竞品研究时）：模板见 [assets/competitor-brief-template.md](assets/competitor-brief-template.md)，交给任何竞品分析工具，不依赖本机绝对路径。
 - `validation.json`：实际运行了 `scripts/validate_evidence.py` 时才生成。

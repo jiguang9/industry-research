@@ -144,7 +144,7 @@ class TimeSeriesVsCrossSectionComparisonTests(unittest.TestCase):
             "source_ids": ["S001"], "missing_dimensions": [],
         }
         evidence["claims"].append({
-            "id": "C010", "statement": "对比年份", "kind": "fact", "evidence_status": "supported",
+            "id": "C010", "statement": "对比年份", "dimensions": [], "kind": "fact", "evidence_status": "supported",
             "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
             "confidence": "high", "limitations": [],
             "metrics": [{
@@ -217,13 +217,20 @@ class CrossMetricComparisonIntegrityTests(unittest.TestCase):
     def _two_claims_with_metrics(self, evidence, metric_a, metric_b):
         evidence["claims"] = []
         evidence["gaps"] = []
+        evidence["coverage"] = {
+            "market": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "value_chain": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "business_model": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "competition": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "trends_risks": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+        }
         evidence["claims"].append({
-            "id": "C001", "statement": "A", "kind": "fact", "evidence_status": "supported",
+            "id": "C001", "statement": "A", "dimensions": [], "kind": "fact", "evidence_status": "supported",
             "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
             "confidence": "high", "limitations": [], "metrics": [metric_a],
         })
         evidence["claims"].append({
-            "id": "C002", "statement": "B", "kind": "fact", "evidence_status": "supported",
+            "id": "C002", "statement": "B", "dimensions": [], "kind": "fact", "evidence_status": "supported",
             "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
             "confidence": "high", "limitations": [], "metrics": [metric_b],
         })
@@ -339,13 +346,20 @@ class NameAndPriceBasisMismatchTests(unittest.TestCase):
     def _two_claims_with_metrics(self, evidence, metric_a, metric_b):
         evidence["claims"] = []
         evidence["gaps"] = []
+        evidence["coverage"] = {
+            "market": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "value_chain": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "business_model": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "competition": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "trends_risks": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+        }
         evidence["claims"].append({
-            "id": "C001", "statement": "A", "kind": "fact", "evidence_status": "supported",
+            "id": "C001", "statement": "A", "dimensions": [], "kind": "fact", "evidence_status": "supported",
             "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
             "confidence": "high", "limitations": [], "metrics": [metric_a],
         })
         evidence["claims"].append({
-            "id": "C002", "statement": "B", "kind": "fact", "evidence_status": "supported",
+            "id": "C002", "statement": "B", "dimensions": [], "kind": "fact", "evidence_status": "supported",
             "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
             "confidence": "high", "limitations": [], "metrics": [metric_b],
         })
@@ -403,6 +417,13 @@ class CrossSectionalPeriodMismatchTests(unittest.TestCase):
         evidence = load("valid_evidence.json")
         evidence["claims"] = []
         evidence["gaps"] = []
+        evidence["coverage"] = {
+            "market": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "value_chain": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "business_model": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "competition": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+            "trends_risks": {"status": "out_of_scope", "claim_ids": [], "note": "test fixture reset", "next_question": None},
+        }
         evidence["claims"].append({
             "id": "C001", "statement": "company A revenue", "kind": "fact", "evidence_status": "supported",
             "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": None,
@@ -496,11 +517,11 @@ class SchemaVersionDisciplineTests(unittest.TestCase):
 
     def test_old_schema_version_with_missing_new_field_fails_with_both_signals(self):
         evidence = load("valid_evidence.json")
-        evidence["schema_version"] = "1.0"
-        del evidence["comparisons"][0]["comparison_type"]
+        evidence["schema_version"] = "1.1"
+        del evidence["coverage"]
         result = ve.validate(evidence, None)
-        self.assertTrue(any("1.1" in m for m in error_messages(result)))
-        self.assertTrue(any("comparison_type" in m for m in error_messages(result)))
+        self.assertTrue(any("1.2" in m for m in error_messages(result)))
+        self.assertTrue(any("coverage" in e["path"] for e in result.errors))
 
     def test_unknown_fabricated_schema_version_is_rejected(self):
         evidence = load("valid_evidence.json")
@@ -693,9 +714,147 @@ class FixtureInventoryTests(unittest.TestCase):
             "invalid_cycle.json", "invalid_unknown_supported.json",
             "invalid_fact_snippet_only.json", "invalid_missing_dimension.json",
             "invalid_calculated_no_method.json", "invalid_comparison_contradiction.json",
+            "invalid_coverage_missing_key.json", "invalid_coverage_bad_status.json",
+            "invalid_coverage_dangling_claim.json", "invalid_dimensions_bad_value.json",
         }
         present = {p.name for p in FIXTURES.iterdir()}
         self.assertTrue(expected.issubset(present))
+
+
+class CoverageValidationTests(unittest.TestCase):
+    """schema 1.2: top-level `coverage` records the five research dimensions
+    (market/value_chain/business_model/competition/trends_risks). A 'covered'
+    status must be backed by an actual non-unknown claim tagged with that
+    dimension, not just a filled-in field."""
+
+    def test_valid_fixture_coverage_passes(self):
+        result = ve.validate(load("valid_evidence.json"), None)
+        self.assertEqual(result.errors, [])
+
+    def test_missing_coverage_key_is_rejected(self):
+        result = ve.validate(load("invalid_coverage_missing_key.json"), None)
+        self.assertTrue(any("missing required dimension key" in m for m in error_messages(result)))
+
+    def test_extra_coverage_key_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["coverage"]["not_a_real_dimension"] = {
+            "status": "out_of_scope", "claim_ids": [], "note": "x", "next_question": None,
+        }
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("unexpected key" in m for m in error_messages(result)))
+
+    def test_illegal_coverage_status_is_rejected(self):
+        result = ve.validate(load("invalid_coverage_bad_status.json"), None)
+        self.assertTrue(any("coverage.market.status" in e["path"] for e in result.errors))
+
+    def test_coverage_dangling_claim_reference_is_rejected(self):
+        result = ve.validate(load("invalid_coverage_dangling_claim.json"), None)
+        self.assertTrue(any("references unknown claim id" in m for m in error_messages(result)))
+
+    def test_covered_status_referencing_only_unknown_claim_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        # C003 is kind=unknown in the base fixture; a 'covered' status backed
+        # only by an unknown claim must not pass, even though the claim_id
+        # itself resolves and is tagged with the right dimension.
+        evidence["claims"][2]["dimensions"] = ["trends_risks"]
+        evidence["coverage"]["trends_risks"] = {
+            "status": "covered", "claim_ids": ["C003"], "note": "x", "next_question": None,
+        }
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("requires at least one referenced claim_id" in m for m in error_messages(result)))
+
+    def test_covered_status_referencing_claim_without_matching_dimension_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        # C001 is kind=fact but tagged only with 'market', not 'competition'.
+        evidence["coverage"]["competition"] = {
+            "status": "covered", "claim_ids": ["C001"], "note": "x", "next_question": None,
+        }
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("requires at least one referenced claim_id" in m for m in error_messages(result)))
+
+    def test_covered_status_with_qualifying_claim_is_accepted(self):
+        result = ve.validate(load("valid_evidence.json"), None)
+        # Base fixture's market=covered is backed by C001 (kind=fact,
+        # dimensions includes 'market') -- already exercised by the
+        # no-errors check above, restated here for clarity of intent.
+        self.assertEqual(
+            [e for e in result.errors if e["path"] == "coverage.market"],
+            [],
+        )
+
+    def test_missing_and_out_of_scope_do_not_require_a_qualifying_claim(self):
+        # Honest 'missing'/'out_of_scope' states with no claim_ids must save
+        # cleanly -- the schema must not pressure fabricating coverage.
+        evidence = load("valid_evidence.json")
+        result = ve.validate(evidence, None)
+        for dim in ("value_chain", "business_model", "competition"):
+            self.assertEqual(
+                [e for e in result.errors if e["path"].startswith(f"coverage.{dim}")],
+                [],
+            )
+
+    def test_missing_top_level_coverage_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["coverage"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("coverage" in e["path"] for e in result.errors))
+
+    def test_coverage_note_must_not_be_empty(self):
+        evidence = load("valid_evidence.json")
+        evidence["coverage"]["value_chain"]["note"] = ""
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("note must not be empty" in m for m in error_messages(result)))
+
+
+class ClaimDimensionsValidationTests(unittest.TestCase):
+    """schema 1.2: claims[].dimensions tags a claim to one or more of the
+    five research dimensions, restricted to the fixed vocabulary."""
+
+    def test_missing_claim_dimensions_is_an_error(self):
+        evidence = load("valid_evidence.json")
+        del evidence["claims"][0]["dimensions"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("dimensions" in m for m in error_messages(result)))
+
+    def test_illegal_dimension_value_is_rejected(self):
+        result = ve.validate(load("invalid_dimensions_bad_value.json"), None)
+        self.assertTrue(any("'profitability' is not one of" in m for m in error_messages(result)))
+
+    def test_duplicate_dimension_value_is_rejected(self):
+        evidence = load("valid_evidence.json")
+        evidence["claims"][0]["dimensions"] = ["market", "market"]
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("duplicates" in m for m in error_messages(result)))
+
+    def test_empty_dimensions_array_is_valid(self):
+        # A claim that's pure scope/boundary background, with no dimension
+        # tag, must be allowed -- dimensions is not required to be non-empty.
+        evidence = load("valid_evidence.json")
+        evidence["claims"][2]["dimensions"] = []
+        evidence["coverage"]["trends_risks"]["claim_ids"] = ["C002"]
+        result = ve.validate(evidence, None)
+        self.assertEqual(result.errors, [])
+
+    def test_claim_can_carry_multiple_dimension_tags(self):
+        # C002 in the base fixture already carries two tags (market,
+        # trends_risks) -- confirm that's accepted, not just single-tag claims.
+        evidence = load("valid_evidence.json")
+        self.assertEqual(evidence["claims"][1]["dimensions"], ["market", "trends_risks"])
+        result = ve.validate(evidence, None)
+        self.assertEqual(result.errors, [])
+
+
+class SchemaVersionUpgradePromptTests(unittest.TestCase):
+    """A file honestly declaring the previous schema_version (1.1, which had
+    no coverage/dimensions concept) must fail clearly rather than being
+    silently accepted under 1.2's new rules -- mirroring how 1.0 files were
+    handled when 1.1 was introduced."""
+
+    def test_declared_1_1_file_is_rejected_not_silently_upgraded(self):
+        evidence = load("valid_evidence.json")
+        evidence["schema_version"] = "1.1"
+        result = ve.validate(evidence, None)
+        self.assertTrue(any("expected '1.2'" in m and "'1.1'" in m for m in error_messages(result)))
 
 
 if __name__ == "__main__":

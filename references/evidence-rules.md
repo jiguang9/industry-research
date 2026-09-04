@@ -2,6 +2,10 @@
 
 本文件展开 [SKILL.md](../SKILL.md) 中的证据规则要点，供实际写作时对照检查。数据结构定义见 [evidence-schema.md](evidence-schema.md)。
 
+## 0. 五维标签与覆盖记录
+
+每条主张打上关联的五维标签（`dimensions`：`market`/`value_chain`/`business_model`/`competition`/`trends_risks`，可多选、可为空），方法见 [industry-framework.md](industry-framework.md)。研究收尾时把每个维度的认识状态压缩进顶层 `coverage`；`status=covered` 必须有一条 `kind != unknown` 且 `dimensions` 匹配该维度的主张支撑，不能只把字段填满就算数。
+
 ## 1. 事实 / 推断 / 未知
 
 - **fact**：有明确来源支持的陈述，例如"某上市公司 2025 年年报披露其境内营收为 X 亿元"。

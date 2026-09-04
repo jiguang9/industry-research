@@ -1,10 +1,17 @@
 {
   "schema_version": "1.2",
   "research": {
-    "industry": "测试：口径缺失未声明", "region": "测试", "scope": "测试", "exclusions": "",
+    "industry": "测试：dimensions 非法取值", "region": "测试", "scope": "测试", "exclusions": "",
     "purpose": "overview", "depth": "quick", "research_date": "2026-09-03",
     "data_cutoff": null, "assumptions": [], "status": "partial",
     "capabilities": {"web_search": true, "file_read": true, "file_write": true, "code_execution": true}
+  },
+  "coverage": {
+    "market": {"status": "out_of_scope", "claim_ids": [], "note": "测试", "next_question": null},
+    "value_chain": {"status": "out_of_scope", "claim_ids": [], "note": "测试", "next_question": null},
+    "business_model": {"status": "out_of_scope", "claim_ids": [], "note": "测试", "next_question": null},
+    "competition": {"status": "out_of_scope", "claim_ids": [], "note": "测试", "next_question": null},
+    "trends_risks": {"status": "out_of_scope", "claim_ids": [], "note": "测试", "next_question": null}
   },
   "sources": [
     {"id": "S001", "title": "来源A", "publisher": null, "url": "https://example.com/a", "file_ref": null,
@@ -12,13 +19,9 @@
      "data_period": null, "origin_id": null, "location": null, "excerpt": null, "access_note": null}
   ],
   "claims": [
-    {"id": "C001", "statement": "包含一个缺失时期但未声明的数字", "kind": "fact", "evidence_status": "partial",
+    {"id": "C001", "statement": "测试主张，dimensions 使用了不允许的值", "dimensions": ["profitability"], "kind": "fact", "evidence_status": "supported",
      "source_ids": ["S001"], "counter_source_ids": [], "basis_claim_ids": [], "rationale": null,
-     "confidence": "low", "limitations": [],
-     "metrics": [
-       {"name": "示例指标", "value": 100, "unit": "家", "period": null, "region": "测试市", "scope": "测试范围",
-        "value_type": "reported", "source_ids": ["S001"], "missing_dimensions": []}
-     ]}
+     "confidence": "high", "limitations": [], "metrics": []}
   ],
   "comparisons": [],
   "gaps": [],

@@ -1,6 +1,6 @@
 # 验证记录
 
-版本：0.1.7　记录日期：2026-09-04
+版本：0.1.8　记录日期：2026-09-04
 
 ## 0. 外部评审修复历史
 
@@ -18,7 +18,19 @@
 
 **v0.1.7（相对 v0.1.6，2026-09-04）**：不是外部代码评审，是一次真实用户使用反馈。用户在自己的 Claude Code 会话中安装并调用了本 Skill（"帮我快速了解新能源汽车行业"），Skill 正确写出了 `report.md`/`evidence.json`/`validation.json`，但对话回复只有一句"报告已生成：report.md、evidence.json、validation.json"这样的文件名列表；在用户的宿主 UI 中，文件以附件卡片形式呈现，需要额外点击才能打开查看，导致用户看不到研究内容本身。核实后确认 SKILL.md 此前只规定"无文件能力时在对话中直接输出"，没有规定"有文件能力时对话回复也应包含正文内容"，属于真实的行为指引缺口。已在 SKILL.md 的输出章节补充明确要求：写文件不代表交付完成，对话回复必须直接给出 report.md 正文内容。附件是否需要点击查看属于宿主 UI 行为，不是本 Skill 能控制的部分，但回复文本本身完全在 Skill 的控制范围内。详见 `CHANGELOG.md` 的 0.1.7 条目。
 
-以上七轮修复均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.6` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.7 修复后的状态更新。
+**v0.1.8（相对 v0.1.7，2026-09-04）**：不是评审修复，是一次架构级需求变更——项目最初按"定义与边界 + 行业地图/交易与交付/商业模式/用户与渠道/竞争结构/变化与问题"六模块工作流实施（v0.1.0—v0.1.7），新收到的实施方案把研究主线统一为"定义与边界 → 五维（市场 `market`/产业链 `value_chain`/商业模式 `business_model`/竞争格局 `competition`/趋势与风险 `trends_risks`）→ 关键关系解释 → 任务建议"。核实后确认这是不兼容旧结构的真实变更（不是措辞调整），按方案要求在现有项目基础上增量迁移，未删除重建：
+
+- 新增 [`references/industry-framework.md`](../references/industry-framework.md)：五维问题清单、商业模式六要素、产业链/竞争/趋势方法、`coverage`/`dimensions` 填写方法。
+- `SKILL.md`、`references/research-workflow.md`：核心研究流程从"确定边界→选择来源→六模块→机会→校验"改为"确定边界→选择来源→五维研究→关系解释→机会→校验"。
+- `references/evidence-schema.md`、`scripts/validate_evidence.py`：`schema_version` 从 `1.1` 提升到 `1.2`（不兼容变更，不复用已用于 `comparison_type` 的 1.1）。新增顶层 `coverage`（五维覆盖记录：`status`/`claim_ids`/`note`/`next_question`，键固定为五个维度代码）和 `claims[].dimensions`（关联维度标签，取值限定五个代码、不允许重复）。校验器新增 `validate_coverage()`：五个键必须齐全且不能有多余键、`status` 枚举校验、`claim_ids` 悬空引用检测、**`status=covered` 必须有至少一条 `kind != unknown` 且 `dimensions` 匹配该维度的主张支撑**（不能只把字段填满就算数）；`claims[].dimensions` 校验取值合法性与去重。任何仍声明 `schema_version: "1.1"` 的文件会被判为结构错误（复用既有的版本不匹配硬失败机制，不新增特殊逻辑）。
+- `assets/report-template.md`：正文前部新增"行业定义与五维总览"（五维总览表）与独立的"关键关系解释"一节；证据表新增"关联维度"列。`assets/client-brief-template.md`、`assets/competitor-brief-template.md` 同步增加维度/产业链位置列。
+- `examples/public-industry-case/`：`evidence.json` 迁移到 schema 1.2——为全部 16 条既有主张补充 `dimensions` 标签、新增顶层 `coverage`；**原有 16 条主张的 `statement`、来源、`kind`、`evidence_status` 均未改动**，这次迁移只是给已有证据补充维度归类，不是重新研究，不构成新的事实性变更。`report.md` 相应加入五维总览表和"关键关系解释"一节（节卡持续亏损与 IPO 终止之间"可能机制而非已证实因果"的解释）。`competitor-brief.md` 补充产业链位置/关系列。重新运行 `validate_evidence.py`，`structural_ok: true`，警告数不变（2条，均为既有的 inference 缺 source_ids 软提醒）。
+- `tests/fixtures/valid_evidence.json` 补充 `coverage`+`dimensions`；新增 4 个 invalid fixture（`invalid_coverage_missing_key.json`、`invalid_coverage_bad_status.json`、`invalid_coverage_dangling_claim.json`、`invalid_dimensions_bad_value.json`）和对应测试类（`CoverageValidationTests`、`ClaimDimensionsValidationTests`、`SchemaVersionUpgradePromptTests`），测试数量从 80 增至 97。
+- `evals/cases.md` 新增用例 13—21（完整 Quick 五维总览、只研究单一维度、多角色平台生态、订阅+项目组合收入、材料显示上游议价更强、只有品牌无份额数据、成熟行业新细分增长、只有趋势观点无变化事实、用户提供框架图案例）；`evals/rubric.md` 新增第 5 项"五维语义验收"评分维度。
+
+**诚实标注的缺口**：以上验证均为机器校验（`validate_evidence.py`、`check_skill.py`、`unittest`）和人工复核，**没有**重新开一个真实 Agent 会话、按新的五维结构完整跑一次 evals/cases.md 的用例（尤其是新增的 13—21）来验证实际研究行为——第 4 节记录的两次真实子 Agent 测试发生在六模块工作流版本，其"发现机制可用""证据纪律可用"等结论在架构层面仍然成立，但不能证明五维总览表、`coverage` 的填写方式在真实研究场景下同样可用。这是本次交付明确记录、留给下一次有可用 Agent 运行环境时补齐的工作项，详见 [`docs/platform-compatibility.md`](platform-compatibility.md) 顶部说明。
+
+以上八轮修复/变更均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.7` tag**，问题记录保留在 git 历史中。本文件下方"1—3 节"的自动化测试/校验器结果已按 v0.1.8 状态更新；"4—6 节"的行为评测记录保留 v0.1.0/v0.1.7 期间的真实执行历史，未重新执行，按上一段如实标注。
 
 ## 1. 自动化测试
 
@@ -32,14 +44,14 @@ python3 tools/build_release.py
 实际运行结果（本机，macOS 23.5.0 arm64，Python 3.9.6）：
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
-- `python3 -m unittest discover -s tests`：**80 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73 → v0.1.5: 80），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 name/price_basis/cross_sectional 的 period、comparisons/gaps 重复 ID 检测、machine_validation 字段级校验、research.data_cutoff/claims[].rationale/metrics[].missing_dimensions/顶层comparisons·gaps·checks及其两个子对象删除后必须报错、metric 维度字段删除+声明missing仍报错、checks 两个子对象的内部字段类型/存在性校验、limitations/inputs/assumptions/mismatched_dimensions 数组元素类型校验、schema_version 不匹配（含伪造版本号）一律报错、**comparisons 至少两个不同 metric_refs**、**metric 可选字段无论 value_type 都做类型校验**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.7.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。v0.1.6、v0.1.7 均未改动 `scripts/validate_evidence.py`，测试数量维持 80 个不变（详见上方"0. 外部评审修复历史"）。
+- `python3 -m unittest discover -s tests`：**97 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73 → v0.1.5: 80 → v0.1.8: 97），v0.1.6/v0.1.7 未改动 `scripts/validate_evidence.py`，测试数保持80不变；v0.1.8 新增 17 个测试（`CoverageValidationTests`、`ClaimDimensionsValidationTests`、`SchemaVersionUpgradePromptTests`），覆盖此前所有规则外加：顶层 `coverage` 的五键完整性/多余键检测、`status` 枚举校验、`claim_ids` 悬空引用检测、`status=covered` 必须有一条 `kind!=unknown` 且 `dimensions` 匹配的主张支撑、`claims[].dimensions` 取值合法性与去重、声明旧版本 `schema_version: "1.1"` 的文件按既有版本不匹配机制硬失败。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.8.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 
 ## 2. evidence.json 校验器（scripts/validate_evidence.py）自测
 
-见 `tests/test_evidence.py`：8 条结构规则各自有对应的失败 fixture（`tests/fixtures/invalid_*.json`），逐一确认能被正确拦截；同时确认合法的 `unknown`/`insufficient_evidence` 状态、跨年度时间序列比较、同源转载分组等"合理但容易被误判"的情况不会被错误拒绝。
+见 `tests/test_evidence.py`：12 条结构规则各自有对应的失败 fixture（`tests/fixtures/invalid_*.json`，v0.1.8 新增 `invalid_coverage_missing_key.json`、`invalid_coverage_bad_status.json`、`invalid_coverage_dangling_claim.json`、`invalid_dimensions_bad_value.json` 四个），逐一确认能被正确拦截；同时确认合法的 `unknown`/`insufficient_evidence` 状态、跨年度时间序列比较、同源转载分组、`missing`/`out_of_scope` 覆盖状态无需捏造支撑主张等"合理但容易被误判"的情况不会被错误拒绝。
 
 对真实案例的校验：
 
@@ -49,7 +61,7 @@ python3 scripts/validate_evidence.py examples/public-industry-case/evidence.json
   --output examples/public-industry-case/validation.json
 ```
 
-结果：`structural_ok: true`，0 errors，0 warnings（完整输出见 `examples/public-industry-case/validation.json`）。
+结果：`structural_ok: true`，0 errors，2 warnings（`C012`/`C013` 两条 inference 未附 `source_ids` 的软提醒，属于合理的既有状态——两者均为对其他已有来源支撑的主张的联合解读，不是凭空的推断；完整输出见 `examples/public-industry-case/validation.json`）。
 
 ## 3. 平台验证
 
@@ -120,4 +132,5 @@ Skill版本：0.1.0
 
 - Codex / OpenClaw / Hermes 的宿主发现与行为验证：需要对应平台的本地运行时或账号。
 - 对比评测的实际执行：需要额外预算，方法已就绪。
-- 用例2、3、5-12（共10个）的实际执行：方法已就绪，欢迎后续会话或协作者执行并补充记录（用例1、4已完成，见第4节）。
+- 用例2、3、5-21（共19个，含 v0.1.8 新增的13-21）的实际执行：方法已就绪，欢迎后续会话或协作者执行并补充记录（用例1、4已完成，见第4节，但均发生在六模块工作流版本，见上方"0. 外部评审修复历史"末尾的诚实标注）。
+- **v0.1.8 五维框架的真实行为验证**：需要重新开一个真实 Agent 会话，按新的"定义与边界→五维→关系解释→建议"流程完整跑一次用例1/4（复验旧结论在新结构下仍成立）和新增用例13-21，确认 `report.md` 五维总览表、`evidence.json` 的 `coverage`/`dimensions` 在真实研究场景下的实际填写质量，而不只是本次这样的机器校验+人工复核。
