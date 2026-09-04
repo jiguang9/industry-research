@@ -50,7 +50,7 @@
 
 - 安装位置（默认，管理型目录）：`~/.openclaw/skills/industry-research/`
 - 调用：`openclaw skills list` / `openclaw skills info industry-research` 确认发现；`/skill industry-research <任务>` 调用
-- Git 直接安装：`openclaw skills install git:jiguang9/industry-research@v0.1.9`——该命令要求"`SKILL.md` 位于源仓库根目录"，本仓库正好符合这一结构（单 Skill、仓库根目录即 Skill 根目录），因此理论上应可用；但由于本机没有 OpenClaw 运行时，**该命令本身未实际执行验证**
+- Git 直接安装：`openclaw skills install git:jiguang9/industry-research@v0.1.10`——该命令要求"`SKILL.md` 位于源仓库根目录"，本仓库正好符合这一结构（单 Skill、仓库根目录即 Skill 根目录），因此理论上应可用；但由于本机没有 OpenClaw 运行时，**该命令本身未实际执行验证**
 
 | 层次 | 状态 | 说明 |
 |---|---|---|
