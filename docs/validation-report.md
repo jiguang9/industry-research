@@ -1,6 +1,6 @@
 # 验证记录
 
-版本：0.1.8　记录日期：2026-09-04
+版本：0.1.9　记录日期：2026-09-04
 
 ## 0. 外部评审修复历史
 
@@ -34,7 +34,9 @@
 
 **仍然存在的缺口**：这次补测只覆盖了 21 个用例中的 1 个（用例1，同时满足新增用例13"完整 Quick 请求"的检查点），且是同一台机器、同一个会话内完成，不是独立第三方评审。用例2-12（除已在六模块版本下执行的用例1/4历史记录外）以及新增用例14-21仍未执行，见下方第4节表格。
 
-以上八轮修复/变更均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.7` tag**，问题记录保留在 git 历史中。本文件下方"1—3 节"的自动化测试/校验器结果已按 v0.1.8 状态更新；"4—6 节"的行为评测记录保留 v0.1.0/v0.1.7 期间的真实执行历史，未重新执行，按上一段如实标注。
+**v0.1.9（相对 v0.1.8，2026-09-04）**：第二轮验收复核发现，v0.1.8 修复定义卡/代表性交易压缩问题时新写入的"履约成本与主要约束"一句，把 `C002` 的净利润转负直接解读为"履约成本相对收入偏高、规模效应尚未跑通"，但 `C001`/`C002` 只有营业收入和净利润数字，没有毛利率或费用结构拆分证据，亏损也可能来自研发/销售/管理等期间费用——这是一处真实的证据越界。核实后确认已修正，改为明确说明"现有数据无法判断亏损的具体原因"，不引入新主张、不改动任何既有 claim。**`v0.1.8` 当时已经打了 tag 并推送到远程、CI 已通过**，因此没有删除重建这个已公开的 tag（那属于改写已发布历史，已被本机安全机制正确拦截），而是像此前每一轮修复一样另开一个新版本号。
+
+以上九轮修复/变更均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.8` tag**，问题记录保留在 git 历史中。本文件下方"1—3 节"的自动化测试/校验器结果已按 v0.1.9 状态更新；"4—6 节"的行为评测记录保留 v0.1.0/v0.1.7/v0.1.8 期间的真实执行历史，未重新执行，按上一段如实标注。
 
 ## 1. 自动化测试
 
@@ -49,7 +51,7 @@ python3 tools/build_release.py
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
 - `python3 -m unittest discover -s tests`：**97 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73 → v0.1.5: 80 → v0.1.8: 97），v0.1.6/v0.1.7 未改动 `scripts/validate_evidence.py`，测试数保持80不变；v0.1.8 新增 17 个测试（`CoverageValidationTests`、`ClaimDimensionsValidationTests`、`SchemaVersionUpgradePromptTests`），覆盖此前所有规则外加：顶层 `coverage` 的五键完整性/多余键检测、`status` 枚举校验、`claim_ids` 悬空引用检测、`status=covered` 必须有一条 `kind!=unknown` 且 `dimensions` 匹配的主张支撑、`claims[].dimensions` 取值合法性与去重、声明旧版本 `schema_version: "1.1"` 的文件按既有版本不匹配机制硬失败。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.8.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.9.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 

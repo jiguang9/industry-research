@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.9 - 2026-09-04
+
+`v0.1.8` was already tagged and pushed (all CI green) when a second acceptance-review pass found one more real evidence-boundary violation in the public example, after `v0.1.8`'s own review round had already fixed two others. Rather than deleting and force-recreating the already-public `v0.1.8` tag (a destructive rewrite of released history, correctly refused), this fix ships as its own patch version, consistent with how every prior fix round in this project has always shipped -- as a new version, never a moved tag.
+
+- `examples/public-industry-case/report.md`: the "履约成本与主要约束" (fulfillment cost & constraints) bullet in the representative-transaction breakdown interpreted `C002`'s net-loss numbers as evidence that "履约成本相对收入偏高、规模效应尚未跑通" (fulfillment cost is high relative to revenue, scale effects haven't kicked in) -- but `C001`/`C002` only carry revenue and net-profit figures, with no gross-margin, cost-of-goods, or expense-structure breakdown. A net loss could equally come from R&D, SG&A, or other period expenses; attributing it specifically to fulfillment cost was an inference the evidence doesn't support. Replaced with an explicit statement that current data cannot distinguish the cause. No underlying claims changed. Re-validated: `structural_ok: true`, same 2 pre-existing warnings.
+
 ## 0.1.8 - 2026-09-04
 
 Not a review-driven bugfix round -- an architecture-level requirement change. The project was originally built around a six-module workflow (行业地图/交易与交付/商业模式/用户与渠道/竞争结构/变化与问题, v0.1.0-v0.1.7). A revised implementation spec unifies the research line into "boundary definition -> five dimensions (market/value_chain/business_model/competition/trends_risks) -> key-relationship explanation -> task recommendations." Confirmed this is a genuine incompatible change (not just wording) and migrated the existing project in place, per the spec's own instruction not to delete and rebuild.
@@ -25,10 +31,6 @@ An acceptance review of the above found two real gaps before publishing: (1) the
 - `examples/public-industry-case/report.md` sections 2-3 rewritten accordingly. Added `G005` to `evidence.json` documenting a real, previously-implicit gap: no evidence was found for unit pricing or delivery scope, and `C001`'s company-wide revenue can't be divided by its robot-unit-count to back out a per-unit price (different scopes -- revenue explicitly includes non-robot business lines). None of the underlying 16 claims' facts changed. Re-validated: `structural_ok: true`, same 2 pre-existing warnings.
 - Added `examples/public-industry-case/client-brief.md`, explicitly labeled as a demonstration of what a client-prep handoff would look like reusing this same evidence (the actual run's `purpose` is `overview`, so it wouldn't normally produce this file) -- its five questions are drawn from real gaps (G001/G003/G005), not filler.
 - Committed, pushed to `origin/main`, and tagged `v0.1.8`; all 4 remote CI jobs (ubuntu/macos x Python 3.10/3.12) passed on the tagged commit.
-
-### Second-round acceptance review (still 0.1.8, same tag)
-
-A second review pass, after the above was pushed, found one more real evidence-boundary violation: the new "履约成本与主要约束" (fulfillment cost & constraints) bullet in `examples/public-industry-case/report.md` interpreted `C002`'s net-loss numbers as evidence that "履约成本相对收入偏高、规模效应尚未跑通" (fulfillment cost is high relative to revenue, scale effects haven't kicked in) -- but `C001`/`C002` only carry revenue and net-profit figures, with no gross-margin, cost-of-goods, or expense-structure breakdown. A net loss could equally come from R&D, SG&A, or other period expenses; attributing it specifically to fulfillment cost was an inference the evidence doesn't support. Fixed by replacing the claim with an explicit statement that current data cannot distinguish the cause. Re-validated: `structural_ok: true`, same 2 pre-existing warnings, no underlying claims changed.
 
 ## 0.1.7 - 2026-09-04
 
