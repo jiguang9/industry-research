@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.7 - 2026-09-04
+
+Real-world usage feedback, not a review finding this time: a user installed the released skill and ran it against "帮我快速了解新能源汽车行业" in their own Claude Code session. The skill correctly wrote `report.md`/`evidence.json`/`validation.json`, but the chat reply was just a one-line pointer ("报告已生成：report.md、evidence.json、validation.json") -- in their UI, files show as attachment cards that require an extra click to open, so the actual research content wasn't visible without that click.
+
+- `SKILL.md`: added explicit guidance that writing files does not substitute for delivering the report -- the chat reply must include the `report.md` content directly (full text at Quick depth; at minimum a structurally complete rendering -- key takeaways plus main sections -- at Deep depth), not just a list of filenames. Whether attachments require a click to open is host-UI behavior outside this skill's control, but the skill's own reply text is fully within its control and shouldn't assume the user will go find the files.
+
 ## 0.1.6 - 2026-09-03
 
 Sixth round of review, but a different class of finding this time: not a validator code bug (five straight rounds of those are now closed), but semantic evidence-discipline problems in `examples/public-industry-case/` that no structural validator can catch -- exactly the boundary `scripts/validate_evidence.py`'s own disclaimer names ("does not verify... that a citation genuinely supports the claim it is attached to"). Every finding was independently verified by reading the cited claim's actual `statement` field before fixing.

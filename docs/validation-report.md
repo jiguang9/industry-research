@@ -1,6 +1,6 @@
 # 验证记录
 
-版本：0.1.6　记录日期：2026-09-03
+版本：0.1.7　记录日期：2026-09-04
 
 ## 0. 外部评审修复历史
 
@@ -16,7 +16,9 @@
 
 **v0.1.6（相对 v0.1.5）**：第六轮评审转向语义层面的证据纪律，不是校验器代码漏洞——这正是校验器自身免责声明中明确写出它做不到的部分（"不证明引用真的支持原句"）。具体：report.md 用 `[C006]`（销量/份额/出口数字）支持了一句关于协作焊接、大负载码垛"应用亮点"的话，但 C006 的 statement 完全没提应用场景；"直接客户是系统集成商……采购决策涉及生产/工艺和采购部门"这一商业模式核心判断没有任何证据编号；三处推断内容（IPO受挫的影响推测、"国产替代与出海同步推进"、"行业整体仍处扩张期"）被写在"已发生事件"小节下且部分引用了不相关的 claim。逐条核实（读取被引用 claim 的实际 statement，确认是否真的支持所在句子）后全部确认为真实问题：新增真实来源 S009 和对应 claim C011 支持应用场景描述；新增 C012-C016 把此前隐性的推断和从未单独立 claim 的事实（节卡 Pre-IPO 融资信息，此前只存在于 S001 的 excerpt 里）分别独立记录，并把推测性语句移出"已发生事件"小节；新增 G004 记录采购流程调研缺口。详见 `CHANGELOG.md` 的 0.1.6 条目。**这一轮没有修改 `scripts/validate_evidence.py`**——修复前后 `structural_ok` 都是 `true`，因为这些从来都不是结构错误。
 
-以上六轮修复均**不修改或删除已发布的 `v0.1.0`/`v0.1.1`/`v0.1.2`/`v0.1.3`/`v0.1.4`/`v0.1.5` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.6 修复后的状态更新。
+**v0.1.7（相对 v0.1.6，2026-09-04）**：不是外部代码评审，是一次真实用户使用反馈。用户在自己的 Claude Code 会话中安装并调用了本 Skill（"帮我快速了解新能源汽车行业"），Skill 正确写出了 `report.md`/`evidence.json`/`validation.json`，但对话回复只有一句"报告已生成：report.md、evidence.json、validation.json"这样的文件名列表；在用户的宿主 UI 中，文件以附件卡片形式呈现，需要额外点击才能打开查看，导致用户看不到研究内容本身。核实后确认 SKILL.md 此前只规定"无文件能力时在对话中直接输出"，没有规定"有文件能力时对话回复也应包含正文内容"，属于真实的行为指引缺口。已在 SKILL.md 的输出章节补充明确要求：写文件不代表交付完成，对话回复必须直接给出 report.md 正文内容。附件是否需要点击查看属于宿主 UI 行为，不是本 Skill 能控制的部分，但回复文本本身完全在 Skill 的控制范围内。详见 `CHANGELOG.md` 的 0.1.7 条目。
+
+以上七轮修复均**不修改或删除已发布的 `v0.1.0` 至 `v0.1.6` tag**，问题记录保留在 git 历史中。本文件下方的内容已按 v0.1.7 修复后的状态更新。
 
 ## 1. 自动化测试
 
@@ -31,7 +33,7 @@ python3 tools/build_release.py
 
 - `tools/check_skill.py`：**all checks passed (0 warnings)**。
 - `python3 -m unittest discover -s tests`：**80 个测试，全部通过**（v0.1.0: 35 → v0.1.1: 45 → v0.1.2: 56 → v0.1.3: 65 → v0.1.4: 73 → v0.1.5: 80），覆盖 `scripts/validate_evidence.py`（结构校验、循环引用检测、口径缺失检测、report.md 交叉引用、跨 metric 真实一致性核对含 name/price_basis/cross_sectional 的 period、comparisons/gaps 重复 ID 检测、machine_validation 字段级校验、research.data_cutoff/claims[].rationale/metrics[].missing_dimensions/顶层comparisons·gaps·checks及其两个子对象删除后必须报错、metric 维度字段删除+声明missing仍报错、checks 两个子对象的内部字段类型/存在性校验、limitations/inputs/assumptions/mismatched_dimensions 数组元素类型校验、schema_version 不匹配（含伪造版本号）一律报错、**comparisons 至少两个不同 metric_refs**、**metric 可选字段无论 value_type 都做类型校验**）、`tools/install.py`（含中文+空格路径、幂等安装、冲突检测、`--replace`+备份、路径安全防护、四平台并行安装、--replace 失败恢复的故障注入测试）、`tools/build_release.py`（zip 结构、SHA256、解压前后两套校验文件分别可用、不含开发文件）。
-- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.6.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。v0.1.6 未改动 `scripts/validate_evidence.py`，测试数量维持 80 个不变（详见上方"0. 外部评审修复历史"）。
+- `python3 tools/build_release.py`：成功产出 `industry-research-v0.1.7.zip`、`SHA256SUMS.txt`（仅含 zip 自身哈希）。v0.1.6、v0.1.7 均未改动 `scripts/validate_evidence.py`，测试数量维持 80 个不变（详见上方"0. 外部评审修复历史"）。
 
 CI（`.github/workflows/ci.yml`）在 push/PR 时于 ubuntu-latest 与 macos-latest（Python 3.10、3.12）上运行以上全部步骤，另外运行 `scripts/validate_evidence.py` 校验 `examples/public-industry-case/evidence.json`。CI 不运行需要真实模型账号或付费搜索的研究任务。Windows 未纳入本次 CI 矩阵。
 

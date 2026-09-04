@@ -71,7 +71,7 @@ Quick 建立正确的基础理解：行业边界、产业链、商业模式、�
 
 ## 输出
 
-有文件能力时，默认写入用户指定位置，未指定则用 `industry-research-output/<行业slug>-<日期时间>/`；不写入 Skill 安装目录，不覆盖此前运行。
+有文件能力时，默认写入用户指定位置，未指定则用 `industry-research-output/<行业slug>-<日期时间>/`；不写入 Skill 安装目录，不覆盖此前运行。**写了文件不代表交付完成**：对话回复中必须直接给出 `report.md` 的正文内容（Quick 深度通常可以是全文；Deep 深度篇幅较长时至少给出结构完整的正文，如"最值得记住的认识"和各主要小节），不能只回复"报告已生成：report.md、evidence.json"这类文件名列表——很多环境下用户需要额外点击附件才能看到文件内容，只写文件不等于用户已经看到了研究结果。
 
 - `report.md`：本次研究报告，结构见 [assets/report-template.md](assets/report-template.md)。
 - `evidence.json`：范围、来源、主张、缺口与校验状态，字段定义见 [references/evidence-schema.md](references/evidence-schema.md)。
